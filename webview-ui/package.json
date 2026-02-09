@@ -12,6 +12,7 @@
   "dependencies": {
     "@tiptap/core": "^2.2.0",
     "@tiptap/extension-code-block": "^2.2.0",
+    "@tiptap/extension-code-block-lowlight": "^2.27.2",
     "@tiptap/extension-image": "^2.2.0",
     "@tiptap/extension-link": "^2.2.0",
     "@tiptap/extension-placeholder": "^2.2.0",
@@ -21,6 +22,8 @@
     "@tiptap/pm": "^2.2.0",
     "@tiptap/react": "^2.2.0",
     "@tiptap/starter-kit": "^2.2.0",
+    "highlight.js": "^11.11.1",
+    "lowlight": "^3.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "remark-frontmatter": "^5.0.0",

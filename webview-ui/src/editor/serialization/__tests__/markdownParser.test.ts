@@ -124,6 +124,26 @@ describe("parseMarkdown", () => {
     );
   });
 
+  it("parses a bare URL (autolink)", () => {
+    const doc = parseMarkdown("Visit https://example.com for more.");
+    const inlineContent = doc.content![0].content!;
+    // Should have: "Visit ", linked "https://example.com", " for more."
+    expect(inlineContent.length).toBeGreaterThanOrEqual(3);
+    const linkedNode = inlineContent.find(
+      (n: any) => n.marks && n.marks.some((m: any) => m.type === "link")
+    );
+    expect(linkedNode).toBeDefined();
+    expect(linkedNode!.text).toBe("https://example.com");
+    expect(linkedNode!.marks).toContainEqual(
+      expect.objectContaining({
+        type: "link",
+        attrs: expect.objectContaining({
+          href: "https://example.com",
+        }),
+      })
+    );
+  });
+
   it("parses a bold link", () => {
     const doc = parseMarkdown("**[bold link](https://example.com)**");
     const inlineContent = doc.content![0].content!;

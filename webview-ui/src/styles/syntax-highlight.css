@@ -1,0 +1,187 @@
+/* Syntax highlighting for code blocks (lowlight / highlight.js) */
+/* Adapts to VS Code light and dark themes via data-theme attribute */
+
+/* ---------- Dark theme (default) ---------- */
+:root {
+  --hl-keyword: #569cd6;
+  --hl-string: #ce9178;
+  --hl-number: #b5cea8;
+  --hl-comment: #6a9955;
+  --hl-function: #dcdcaa;
+  --hl-variable: #9cdcfe;
+  --hl-type: #4ec9b0;
+  --hl-built-in: #4ec9b0;
+  --hl-literal: #569cd6;
+  --hl-attr: #9cdcfe;
+  --hl-selector: #d7ba7d;
+  --hl-tag: #569cd6;
+  --hl-name: #4ec9b0;
+  --hl-operator: #d4d4d4;
+  --hl-punctuation: #d4d4d4;
+  --hl-regexp: #d16969;
+  --hl-meta: #c586c0;
+  --hl-title: #dcdcaa;
+  --hl-section: #dcdcaa;
+  --hl-symbol: #b5cea8;
+  --hl-deletion: #ce9178;
+  --hl-addition: #b5cea8;
+}
+
+/* ---------- Light theme ---------- */
+[data-theme="light"] {
+  --hl-keyword: #0000ff;
+  --hl-string: #a31515;
+  --hl-number: #098658;
+  --hl-comment: #008000;
+  --hl-function: #795e26;
+  --hl-variable: #001080;
+  --hl-type: #267f99;
+  --hl-built-in: #267f99;
+  --hl-literal: #0000ff;
+  --hl-attr: #001080;
+  --hl-selector: #800000;
+  --hl-tag: #800000;
+  --hl-name: #267f99;
+  --hl-operator: #000000;
+  --hl-punctuation: #000000;
+  --hl-regexp: #811f3f;
+  --hl-meta: #af00db;
+  --hl-title: #795e26;
+  --hl-section: #795e26;
+  --hl-symbol: #098658;
+  --hl-deletion: #a31515;
+  --hl-addition: #098658;
+}
+
+/* ---------- Token styles ---------- */
+
+/* Keywords: if, else, return, class, function, import, etc. */
+.livemark-code-block .hljs-keyword,
+.livemark-code-block .hljs-selector-tag,
+.livemark-code-block .hljs-literal {
+  color: var(--hl-keyword);
+}
+
+/* Strings */
+.livemark-code-block .hljs-string,
+.livemark-code-block .hljs-template-variable {
+  color: var(--hl-string);
+}
+
+/* Numbers */
+.livemark-code-block .hljs-number {
+  color: var(--hl-number);
+}
+
+/* Comments */
+.livemark-code-block .hljs-comment,
+.livemark-code-block .hljs-quote {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+
+/* Function names and calls */
+.livemark-code-block .hljs-title,
+.livemark-code-block .hljs-title\.function_ {
+  color: var(--hl-function);
+}
+
+/* Class / type names */
+.livemark-code-block .hljs-title\.class_,
+.livemark-code-block .hljs-type {
+  color: var(--hl-type);
+}
+
+/* Variables and parameters */
+.livemark-code-block .hljs-variable,
+.livemark-code-block .hljs-params {
+  color: var(--hl-variable);
+}
+
+/* Built-in types and objects */
+.livemark-code-block .hljs-built_in {
+  color: var(--hl-built-in);
+}
+
+/* Attributes (HTML, XML) */
+.livemark-code-block .hljs-attr {
+  color: var(--hl-attr);
+}
+
+/* CSS selectors, HTML tags */
+.livemark-code-block .hljs-selector-class,
+.livemark-code-block .hljs-selector-id {
+  color: var(--hl-selector);
+}
+
+.livemark-code-block .hljs-tag {
+  color: var(--hl-tag);
+}
+
+.livemark-code-block .hljs-name {
+  color: var(--hl-name);
+}
+
+/* Operators and punctuation */
+.livemark-code-block .hljs-operator {
+  color: var(--hl-operator);
+}
+
+.livemark-code-block .hljs-punctuation {
+  color: var(--hl-punctuation);
+}
+
+/* Regex */
+.livemark-code-block .hljs-regexp {
+  color: var(--hl-regexp);
+}
+
+/* Meta / preprocessor */
+.livemark-code-block .hljs-meta,
+.livemark-code-block .hljs-meta .hljs-keyword {
+  color: var(--hl-meta);
+}
+
+/* Section headings (in markdown code blocks, etc.) */
+.livemark-code-block .hljs-section {
+  color: var(--hl-section);
+}
+
+/* Symbols */
+.livemark-code-block .hljs-symbol,
+.livemark-code-block .hljs-bullet {
+  color: var(--hl-symbol);
+}
+
+/* Diff additions and deletions */
+.livemark-code-block .hljs-deletion {
+  color: var(--hl-deletion);
+}
+
+.livemark-code-block .hljs-addition {
+  color: var(--hl-addition);
+}
+
+/* Bold and emphasis within highlighted code */
+.livemark-code-block .hljs-emphasis {
+  font-style: italic;
+}
+
+.livemark-code-block .hljs-strong {
+  font-weight: bold;
+}
+
+/* Template tags (e.g., EJS, Handlebars) */
+.livemark-code-block .hljs-template-tag {
+  color: var(--hl-meta);
+}
+
+/* Subst (template literals interpolation) */
+.livemark-code-block .hljs-subst {
+  color: var(--hl-variable);
+}
+
+/* Property access */
+.livemark-code-block .hljs-property {
+  color: var(--hl-variable);
+}

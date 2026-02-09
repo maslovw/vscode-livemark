@@ -24,7 +24,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Headings (H1–H6) with visual hierarchy (font size, weight, color, spacing)
 - [x] Paragraphs with proper line spacing
 - [x] Block quotes with visual indentation/border
-- [ ] Code blocks with syntax highlighting (language-specific)
+- [x] Code blocks with syntax highlighting (language-specific)
 - [x] Horizontal rules (rendered as visual separators)
 - [ ] Lists:
   - [x] Unordered (bullet) lists
@@ -38,14 +38,17 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Strikethrough (`~~text~~`)
 - [x] Inline code (`` `code` ``)
 - [x] Links (`[text](url)`) rendered as clickable hyperlinks
-- [ ] Auto-links (bare URLs rendered as links)
+- [x] Auto-links (bare URLs rendered as links)
 - [x] Images (`![alt](path)`) rendered inline
+- [ ] Special command to remove image (with confirmation)
+- [ ] set of buttons: Text stile (choose H1-H6/Text, Bold, Italic, lists, URL, etc)
 
 ### 2.3 Extended Markdown (GitHub Flavored Markdown)
 - [ ] Tables with proper column alignment and borders
+- [ ] Special menu to format table (add row, add column, etc)
 - [ ] Footnotes
 - [ ] Definition lists
-- [ ] Syntax highlighting in fenced code blocks with language identifiers
+- [x] Syntax highlighting in fenced code blocks with language identifiers
 
 ***
 
@@ -88,8 +91,8 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ### 4.2 Text Formatting Shortcuts
 - [x] Bold: `Ctrl+B` / `Cmd+B`
 - [x] Italic: `Ctrl+I` / `Cmd+I`
-- [ ] Strikethrough
-- [ ] Inline code
+- [x] Strikethrough
+- [x] Inline code
 - [ ] Code block insertion with language selector
 
 ### 4.3 List Operations
@@ -97,7 +100,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Create ordered list
 - [x] Create task list
 - [x] Toggle task checkbox (`[ ]` ↔ `[x]`)
-- [ ] Indent/outdent list items
+- [x] Indent/outdent list items
 - [x] Auto-continue lists on new line (hit Enter in list → new list item)
 
 ### 4.4 Block Operations

@@ -170,6 +170,21 @@ describe("serializeMarkdown", () => {
     expect(md.trim()).toBe('[click](https://example.com "My Title")');
   });
 
+  it("serializes an autolink (text matches href) as angle-bracket URL", () => {
+    const md = serializeMarkdown(
+      doc(
+        paragraph(
+          text("Visit "),
+          text("https://example.com", [
+            { type: "link", attrs: { href: "https://example.com" } },
+          ]),
+          text(" for more.")
+        )
+      )
+    );
+    expect(md.trim()).toBe("Visit <https://example.com> for more.");
+  });
+
   // ---------------------------------------------------------------------------
   // Code blocks
   // ---------------------------------------------------------------------------

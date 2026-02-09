@@ -30,14 +30,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       <button
         className={btnClass(editor.isActive("strike"))}
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        title="Strikethrough"
+        title="Strikethrough (Cmd+Shift+X)"
       >
         <s>S</s>
       </button>
       <button
         className={btnClass(editor.isActive("code"))}
         onClick={() => editor.chain().focus().toggleCode().run()}
-        title="Inline Code"
+        title="Inline Code (Cmd+E)"
       >
         {"<>"}
       </button>

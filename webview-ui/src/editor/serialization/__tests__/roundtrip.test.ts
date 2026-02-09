@@ -67,6 +67,10 @@ describe("roundtrip: parse -> serialize -> parse -> serialize stability", () => 
     assertStableRoundtrip('[click](https://example.com "Title")');
   });
 
+  it("bare URL (autolink)", () => {
+    assertStableRoundtrip("Visit https://example.com for more.");
+  });
+
   it("fenced code block with language", () => {
     assertStableRoundtrip("```javascript\nconsole.log('hi');\n```");
   });

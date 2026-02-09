@@ -98,6 +98,18 @@
         "when": "activeCustomEditorId == livemark.editor"
       },
       {
+        "command": "livemark.toggleStrikethrough",
+        "key": "ctrl+shift+x",
+        "mac": "cmd+shift+x",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.toggleCode",
+        "key": "ctrl+e",
+        "mac": "cmd+e",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
         "command": "livemark.toggleSourceMode",
         "key": "ctrl+shift+m",
         "mac": "cmd+shift+m",
