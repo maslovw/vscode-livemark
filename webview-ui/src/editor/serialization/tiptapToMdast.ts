@@ -195,9 +195,32 @@ function convertListItemContent(
 ): MdastNode[] {
   const result: MdastNode[] = [];
   for (const node of nodes) {
-    const converted = convertNode(node, baseUri);
-    if (converted) {
-      result.push(converted);
+    if (node.type === "image") {
+      // Images are inline (phrasing) content in MDAST and must live
+      // inside a paragraph.  When the TipTap list item has a
+      // preceding empty paragraph (an artefact of the "paragraph block*"
+      // schema requirement), merge the image into that paragraph
+      // instead of creating a separate one.  This keeps the markdown
+      // clean (e.g. `- ![alt](url)` instead of `-\n\n  ![alt](url)`).
+      const imgNode = convertNode(node, baseUri);
+      if (imgNode) {
+        const prev = result[result.length - 1];
+        if (
+          prev &&
+          prev.type === "paragraph" &&
+          (!prev.children || prev.children.length === 0)
+        ) {
+          // Merge image into the preceding empty paragraph
+          prev.children = [imgNode];
+        } else {
+          result.push({ type: "paragraph", children: [imgNode] });
+        }
+      }
+    } else {
+      const converted = convertNode(node, baseUri);
+      if (converted) {
+        result.push(converted);
+      }
     }
   }
   return result.length > 0

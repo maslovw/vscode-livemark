@@ -18,7 +18,7 @@ interface MdastNode {
 }
 
 /** Resolve a relative image URL against the webview base URI */
-function resolveImageUrl(src: string, baseUri?: string): string {
+export function resolveImageUrl(src: string, baseUri?: string): string {
   if (!baseUri || !src) return src;
   if (
     src.startsWith("http://") ||
@@ -270,7 +270,20 @@ function convertListItemContent(
       }
     }
   }
-  return result.length > 0 ? result : [{ type: "paragraph" }];
+
+  if (result.length === 0) {
+    return [{ type: "paragraph" }];
+  }
+
+  // TipTap listItem schema requires content to start with a paragraph
+  // ("paragraph block*"). If image extraction from a paragraph left
+  // a non-paragraph node first (e.g. a block-level image), prepend
+  // an empty paragraph so the schema is satisfied.
+  if (result[0].type !== "paragraph") {
+    result.unshift({ type: "paragraph" });
+  }
+
+  return result;
 }
 
 interface InlineResult {

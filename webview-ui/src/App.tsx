@@ -7,6 +7,7 @@ import { useVSCodeMessaging } from "./hooks/useVSCodeMessaging";
 import { useEditorContent } from "./hooks/useEditorContent";
 import { useTheme } from "./hooks/useTheme";
 import { serializeMarkdown } from "./editor/serialization/markdownSerializer";
+import { resolveImageUrl } from "./editor/serialization/mdastToTiptap";
 import type { ExtensionMessage } from "./messages";
 
 export const App: React.FC = () => {
@@ -16,7 +17,11 @@ export const App: React.FC = () => {
   const [isSourceMode, setIsSourceMode] = useState(false);
   const [sourceText, setSourceText] = useState("");
   const [baseUri, setBaseUri] = useState<string | undefined>(undefined);
+  const baseUriRef = useRef<string | undefined>(undefined);
   const { applyTheme } = useTheme();
+
+  // Keep a ref to the latest toggleSourceMode so handleCommand never has a stale closure
+  const toggleSourceModeRef = useRef<() => void>(() => {});
 
   const { postMessage } = useVSCodeMessaging(
     useCallback(
@@ -25,6 +30,7 @@ export const App: React.FC = () => {
           case "ext:init": {
             applyTheme(message.theme);
             setBaseUri(message.baseUri);
+            baseUriRef.current = message.baseUri;
             setSourceText(message.text);
             if (editorRef.current) {
               loadContent(editorRef.current, message.text);
@@ -52,7 +58,12 @@ export const App: React.FC = () => {
               editorRef.current
                 .chain()
                 .focus()
-                .setImage({ src: message.relativePath })
+                .setImage({
+                  src: resolveImageUrl(
+                    message.relativePath,
+                    baseUriRef.current
+                  ),
+                })
                 .run();
             }
             break;
@@ -172,7 +183,7 @@ export const App: React.FC = () => {
           break;
         }
         case "toggleSourceMode":
-          toggleSourceMode();
+          toggleSourceModeRef.current();
           break;
       }
     },
@@ -194,6 +205,11 @@ export const App: React.FC = () => {
       setIsSourceMode(true);
     }
   }, [isSourceMode, sourceText, loadContent]);
+
+  // Keep ref in sync with latest toggleSourceMode
+  useEffect(() => {
+    toggleSourceModeRef.current = toggleSourceMode;
+  }, [toggleSourceMode]);
 
   const handleSourceChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

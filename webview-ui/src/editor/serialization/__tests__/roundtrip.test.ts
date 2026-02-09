@@ -130,6 +130,18 @@ describe("roundtrip: parse -> serialize -> parse -> serialize stability", () => 
   it("single-column table", () => {
     assertStableRoundtrip("| Item |\n| --- |\n| One |\n| Two |");
   });
+
+  it("image inside list item", () => {
+    assertStableRoundtrip(
+      "- ![alt text](https://example.com/img.png)"
+    );
+  });
+
+  it("list item with text and image", () => {
+    assertStableRoundtrip(
+      "- item text\n\n  ![caption](https://example.com/photo.png)"
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -329,6 +341,114 @@ describe("mdastToTiptap", () => {
         title: "Title",
       },
     });
+  });
+
+  it("keeps image inside list item with paragraph first", () => {
+    // A list item containing a paragraph with only an image.
+    // The image should be extracted as a block-level image node,
+    // but the list item must still start with a paragraph
+    // (TipTap schema: "paragraph block*").
+    const mdast = {
+      type: "root",
+      children: [
+        {
+          type: "list",
+          ordered: false,
+          children: [
+            {
+              type: "listItem",
+              children: [
+                {
+                  type: "paragraph",
+                  children: [
+                    {
+                      type: "image",
+                      url: "https://example.com/img.png",
+                      alt: "alt",
+                      title: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const result = mdastToTiptap(mdast as any);
+    const listItem = result.content![0].content![0];
+    expect(listItem.type).toBe("listItem");
+    // Must start with a paragraph
+    expect(listItem.content![0].type).toBe("paragraph");
+    // Should contain the image as a block node
+    const imageNode = listItem.content!.find(
+      (n: any) => n.type === "image"
+    );
+    expect(imageNode).toBeDefined();
+    expect(imageNode!.attrs!.src).toBe("https://example.com/img.png");
+  });
+
+  it("keeps image inside list item with text and image", () => {
+    // A list item containing a paragraph with text followed by an image.
+    const mdast = {
+      type: "root",
+      children: [
+        {
+          type: "list",
+          ordered: false,
+          children: [
+            {
+              type: "listItem",
+              children: [
+                {
+                  type: "paragraph",
+                  children: [
+                    { type: "text", value: "some text" },
+                    {
+                      type: "image",
+                      url: "https://example.com/img.png",
+                      alt: "alt",
+                      title: null,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const result = mdastToTiptap(mdast as any);
+    const listItem = result.content![0].content![0];
+    expect(listItem.type).toBe("listItem");
+    // Should start with a paragraph containing the text
+    expect(listItem.content![0].type).toBe("paragraph");
+    expect(listItem.content![0].content![0].text).toBe("some text");
+    // Should have the image as a subsequent block node
+    const imageNode = listItem.content!.find(
+      (n: any) => n.type === "image"
+    );
+    expect(imageNode).toBeDefined();
+  });
+
+  it("resolves relative image URL with baseUri", () => {
+    const mdast = {
+      type: "root",
+      children: [
+        {
+          type: "image",
+          url: "img/photo.png",
+          alt: "photo",
+        },
+      ],
+    };
+    const result = mdastToTiptap(
+      mdast as any,
+      "vscode-webview://host/path"
+    );
+    expect(result.content![0].attrs!.src).toBe(
+      "vscode-webview://host/path/img/photo.png"
+    );
   });
 
   it("ignores unknown node types gracefully", () => {
@@ -717,6 +837,91 @@ describe("tiptapToMdast", () => {
     });
     expect(result.children![0].type).toBe("blockquote");
     expect(result.children![0].children![0].type).toBe("paragraph");
+  });
+
+  it("wraps image in paragraph inside list item", () => {
+    // TipTap list item with [paragraph, image] should serialise to
+    // MDAST list item with [paragraph, paragraph(image)].
+    const result = tiptapToMdast({
+      type: "doc",
+      content: [
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "text" }],
+                },
+                {
+                  type: "image",
+                  attrs: {
+                    src: "https://example.com/img.png",
+                    alt: "alt",
+                    title: null,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const listItem = result.children![0].children![0];
+    expect(listItem.type).toBe("listItem");
+    // First child should be the text paragraph
+    expect(listItem.children![0].type).toBe("paragraph");
+    expect(listItem.children![0].children![0]).toMatchObject({
+      type: "text",
+      value: "text",
+    });
+    // Second child should be a paragraph wrapping the image
+    expect(listItem.children![1].type).toBe("paragraph");
+    expect(listItem.children![1].children![0]).toMatchObject({
+      type: "image",
+      url: "https://example.com/img.png",
+    });
+  });
+
+  it("merges image into preceding empty paragraph inside list item", () => {
+    // When TipTap has [empty paragraph, image] inside a list item (the
+    // typical result of parsing "- ![alt](url)"), the serializer should
+    // merge them into a single paragraph(image) in MDAST.
+    const result = tiptapToMdast({
+      type: "doc",
+      content: [
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                { type: "paragraph" },
+                {
+                  type: "image",
+                  attrs: {
+                    src: "https://example.com/img.png",
+                    alt: "alt",
+                    title: null,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const listItem = result.children![0].children![0];
+    expect(listItem.type).toBe("listItem");
+    // Should have a single paragraph containing the image
+    expect(listItem.children).toHaveLength(1);
+    expect(listItem.children![0].type).toBe("paragraph");
+    expect(listItem.children![0].children![0]).toMatchObject({
+      type: "image",
+      url: "https://example.com/img.png",
+    });
   });
 
   it("ignores unknown node types", () => {
