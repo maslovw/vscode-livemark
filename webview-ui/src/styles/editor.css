@@ -1,0 +1,114 @@
+/* Core editor and toolbar styles */
+
+.livemark-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.livemark-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: var(--livemark-toolbar-bg);
+  border-bottom: 1px solid var(--livemark-toolbar-border);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.livemark-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--livemark-toolbar-fg);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.livemark-toolbar-btn:hover {
+  background: var(--livemark-btn-hover);
+}
+
+.livemark-toolbar-btn.active {
+  background: var(--livemark-btn-active);
+}
+
+.livemark-toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--livemark-toolbar-border);
+  margin: 0 4px;
+}
+
+/* Mode toggle */
+.livemark-mode-toggle {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--livemark-toolbar-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--livemark-toolbar-fg);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.livemark-mode-toggle:hover {
+  background: var(--livemark-btn-hover);
+}
+
+/* Editor area */
+.livemark-editor-area {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.livemark-editor-area .tiptap {
+  min-height: 100%;
+}
+
+/* Source mode textarea */
+.livemark-source-editor {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--livemark-bg);
+  color: var(--livemark-fg);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--livemark-font-size);
+  line-height: var(--livemark-line-height);
+  padding: 20px 40px;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* Scrollbar */
+.livemark-editor-area::-webkit-scrollbar {
+  width: 10px;
+}
+
+.livemark-editor-area::-webkit-scrollbar-thumb {
+  background: var(--livemark-scrollbar);
+  border-radius: 5px;
+}
+
+/* Loading state */
+.livemark-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: var(--livemark-fg);
+  opacity: 0.6;
+}

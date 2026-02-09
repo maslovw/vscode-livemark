@@ -1,0 +1,153 @@
+{
+  "name": "livemark",
+  "displayName": "Livemark",
+  "description": "WYSIWYG Markdown editor for VS Code",
+  "version": "0.1.0",
+  "publisher": "livemark",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "livemark.editor",
+        "displayName": "Livemark",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          },
+          {
+            "filenamePattern": "*.markdown"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "livemark.toggleBold",
+        "title": "Livemark: Toggle Bold"
+      },
+      {
+        "command": "livemark.toggleItalic",
+        "title": "Livemark: Toggle Italic"
+      },
+      {
+        "command": "livemark.toggleStrikethrough",
+        "title": "Livemark: Toggle Strikethrough"
+      },
+      {
+        "command": "livemark.toggleCode",
+        "title": "Livemark: Toggle Inline Code"
+      },
+      {
+        "command": "livemark.setHeading1",
+        "title": "Livemark: Set Heading 1"
+      },
+      {
+        "command": "livemark.setHeading2",
+        "title": "Livemark: Set Heading 2"
+      },
+      {
+        "command": "livemark.setHeading3",
+        "title": "Livemark: Set Heading 3"
+      },
+      {
+        "command": "livemark.toggleSourceMode",
+        "title": "Livemark: Toggle Source/Rendered Mode"
+      },
+      {
+        "command": "livemark.openWithLivemark",
+        "title": "Open with Livemark"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "livemark.toggleBold",
+        "key": "ctrl+b",
+        "mac": "cmd+b",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.toggleItalic",
+        "key": "ctrl+i",
+        "mac": "cmd+i",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.setHeading1",
+        "key": "ctrl+1",
+        "mac": "cmd+1",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.setHeading2",
+        "key": "ctrl+2",
+        "mac": "cmd+2",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.setHeading3",
+        "key": "ctrl+3",
+        "mac": "cmd+3",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.toggleSourceMode",
+        "key": "ctrl+shift+m",
+        "mac": "cmd+shift+m",
+        "when": "activeCustomEditorId == livemark.editor"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "livemark.openWithLivemark",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Livemark",
+      "properties": {
+        "livemark.imageSaveFolder": {
+          "type": "string",
+          "default": "assets",
+          "description": "Folder (relative to workspace root) where pasted images are saved"
+        },
+        "livemark.imageNamePattern": {
+          "type": "string",
+          "default": "image-{timestamp}",
+          "description": "Naming pattern for saved images. Supports {timestamp}, {hash}, {original}"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build:webview": "cd webview-ui && npm run build",
+    "build:extension": "node esbuild.mjs",
+    "build:tests": "node esbuild.mjs --tests",
+    "build": "npm run build:webview && npm run build:extension",
+    "watch:extension": "node esbuild.mjs --watch",
+    "dev:webview": "cd webview-ui && npm run dev",
+    "test:integration": "npm run build:tests && node dist/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.80.0",
+    "@vscode/test-electron": "^2.3.9",
+    "esbuild": "^0.20.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.3.0",
+    "typescript": "^5.3.0"
+  }
+}

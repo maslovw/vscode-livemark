@@ -5,14 +5,14 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ## 1. Core Editing Requirements
 
 ### 1.1 WYSIWYG / Rendered Editing Mode
-- [ ] Edit Markdown content with live rendering (no separate preview pane required)
-- [ ] Hide raw Markdown syntax (`#`, `**`, `[]()`, etc.) during editing or show minimally/inline
-- [ ] Option to toggle between rendered view and raw Markdown source
+- [x] Edit Markdown content with live rendering (no separate preview pane required)
+- [x] Hide raw Markdown syntax (`#`, `**`, `[]()`, etc.) during editing or show minimally/inline
+- [x] Option to toggle between rendered view and raw Markdown source
 - [ ] Cursor positioning works correctly in rendered mode (not confused by concealed syntax)
 - [ ] Selection/highlighting works properly across rendered elements
 
 ### 1.2 Modal Behavior (optional but recommended)
-- [ ] Show rendered view in normal/read mode
+- [x] Show rendered view in normal/read mode
 - [ ] Show raw Markdown (or minimal syntax hints) in insert/edit mode
 - [ ] Smooth transitions between modes without layout jumps
 
@@ -21,25 +21,25 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ## 2. Standard Markdown Syntax Support
 
 ### 2.1 Block Elements
-- [ ] Headings (H1–H6) with visual hierarchy (font size, weight, color, spacing)
-- [ ] Paragraphs with proper line spacing
-- [ ] Block quotes with visual indentation/border
+- [x] Headings (H1–H6) with visual hierarchy (font size, weight, color, spacing)
+- [x] Paragraphs with proper line spacing
+- [x] Block quotes with visual indentation/border
 - [ ] Code blocks with syntax highlighting (language-specific)
-- [ ] Horizontal rules (rendered as visual separators)
+- [x] Horizontal rules (rendered as visual separators)
 - [ ] Lists:
-  - [ ] Unordered (bullet) lists
-  - [ ] Ordered (numbered) lists
-  - [ ] Nested lists with proper indentation
-  - [ ] Task lists / checkboxes (`- [ ]` / `- [x]`)
+  - [x] Unordered (bullet) lists
+  - [x] Ordered (numbered) lists
+  - [x] Nested lists with proper indentation
+  - [x] Task lists / checkboxes (`- [ ]` / `- [x]`)
 
 ### 2.2 Inline Elements
-- [ ] Bold text (`**bold**` or `__bold__`)
-- [ ] Italic text (`*italic*` or `_italic_`)
-- [ ] Strikethrough (`~~text~~`)
-- [ ] Inline code (`` `code` ``)
-- [ ] Links (`[text](url)`) rendered as clickable hyperlinks
+- [x] Bold text (`**bold**` or `__bold__`)
+- [x] Italic text (`*italic*` or `_italic_`)
+- [x] Strikethrough (`~~text~~`)
+- [x] Inline code (`` `code` ``)
+- [x] Links (`[text](url)`) rendered as clickable hyperlinks
 - [ ] Auto-links (bare URLs rendered as links)
-- [ ] Images (`![alt](path)`) rendered inline
+- [x] Images (`![alt](path)`) rendered inline
 
 ### 2.3 Extended Markdown (GitHub Flavored Markdown)
 - [ ] Tables with proper column alignment and borders
@@ -52,18 +52,18 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ## 3. Image Handling (Critical for Obsidian-like workflow)
 
 ### 3.1 Image Display
-- [ ] Inline image rendering from local paths
-- [ ] Inline image rendering from URLs
-- [ ] Image sizing/scaling to fit editor width
+- [x] Inline image rendering from local paths
+- [x] Inline image rendering from URLs
+- [x] Image sizing/scaling to fit editor width
 - [ ] Optional image captions (from alt text)
 - [ ] Support common formats: PNG, JPG, GIF, SVG, WebP
 
 ### 3.2 Image Insertion
-- [ ] **Paste from clipboard** (screenshot or copied image)
-  - [ ] Auto-save pasted image to configurable folder (e.g., `assets/`, `images/`, or per-file folders)
-  - [ ] Auto-insert Markdown image syntax with correct relative path
-  - [ ] Configurable naming scheme (timestamp, hash, custom pattern)
-- [ ] **Drag and drop** image files into editor
+- [x] **Paste from clipboard** (screenshot or copied image)
+  - [x] Auto-save pasted image to configurable folder (e.g., `assets/`, `images/`, or per-file folders)
+  - [x] Auto-insert Markdown image syntax with correct relative path
+  - [x] Configurable naming scheme (timestamp, hash, custom pattern)
+- [x] **Drag and drop** image files into editor
   - [ ] Copy/move file to assets folder
   - [ ] Insert Markdown reference
 - [ ] Insert image via file picker dialog
@@ -82,27 +82,27 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ### 4.1 Heading Operations
 - [ ] Keyboard shortcut to convert current line to H1, H2, H3, H4, H5, H6
 - [ ] Increase/decrease heading level (e.g., `Ctrl+]` / `Ctrl+[`)
-- [ ] Remove heading formatting (convert back to paragraph)
-- [ ] Visual distinction for each heading level in rendered mode
+- [x] Remove heading formatting (convert back to paragraph)
+- [x] Visual distinction for each heading level in rendered mode
 
 ### 4.2 Text Formatting Shortcuts
-- [ ] Bold: `Ctrl+B` / `Cmd+B`
-- [ ] Italic: `Ctrl+I` / `Cmd+I`
+- [x] Bold: `Ctrl+B` / `Cmd+B`
+- [x] Italic: `Ctrl+I` / `Cmd+I`
 - [ ] Strikethrough
 - [ ] Inline code
 - [ ] Code block insertion with language selector
 
 ### 4.3 List Operations
-- [ ] Create unordered list
-- [ ] Create ordered list
-- [ ] Create task list
-- [ ] Toggle task checkbox (`[ ]` ↔ `[x]`)
+- [x] Create unordered list
+- [x] Create ordered list
+- [x] Create task list
+- [x] Toggle task checkbox (`[ ]` ↔ `[x]`)
 - [ ] Indent/outdent list items
-- [ ] Auto-continue lists on new line (hit Enter in list → new list item)
+- [x] Auto-continue lists on new line (hit Enter in list → new list item)
 
 ### 4.4 Block Operations
-- [ ] Insert block quote
-- [ ] Insert horizontal rule
+- [x] Insert block quote
+- [x] Insert horizontal rule
 - [ ] Insert table (with size picker: rows × columns)
 - [ ] Table navigation (Tab to next cell, Shift+Tab to previous)
 - [ ] Add/remove table rows and columns
@@ -119,8 +119,8 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [ ] Backlinks panel showing which files link to current file
 
 ### 5.2 Standard Markdown Links
-- [ ] Render `[text](url)` as clickable links
-- [ ] `Ctrl+Click` / `Cmd+Click` to open links in browser or editor
+- [x] Render `[text](url)` as clickable links
+- [x] `Ctrl+Click` / `Cmd+Click` to open links in browser or editor
 - [ ] Link auto-complete for local files
 - [ ] Update links when files are renamed/moved (refactoring support)
 
@@ -234,7 +234,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ## 11. Customization and Configuration
 
 ### 11.1 Appearance
-- [ ] Theme support (light and dark modes)
+- [x] Theme support (light and dark modes)
 - [ ] Customizable fonts (editor font, heading fonts, code font)
 - [ ] Customizable font sizes for each heading level
 - [ ] Customizable colors (accent colors, link colors, etc.)
@@ -247,8 +247,8 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [ ] Spell check integration
 
 ### 11.3 File Management
-- [ ] Configurable assets folder location
-- [ ] Image file naming patterns
+- [x] Configurable assets folder location
+- [x] Image file naming patterns
 - [ ] Automatic file organization (e.g., move attachments with notes)
 
 ***
@@ -275,10 +275,10 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ## 13. Interoperability and Export
 
 ### 13.1 File Format Compatibility
-- [ ] Standard Markdown (.md) files
-- [ ] Compatible with GitHub Flavored Markdown
+- [x] Standard Markdown (.md) files
+- [x] Compatible with GitHub Flavored Markdown
 - [ ] Compatible with Obsidian syntax (for migration)
-- [ ] Compatible with other Markdown editors (no proprietary extensions)
+- [x] Compatible with other Markdown editors (no proprietary extensions)
 
 ### 13.2 Export Options
 - [ ] Export to HTML
@@ -313,15 +313,15 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ## 15. Developer Experience (Plugin Architecture)
 
 ### 15.1 For VS Code
-- [ ] Custom editor provider API implementation
-- [ ] Webview-based rendering or native editor extension
+- [x] Custom editor provider API implementation
+- [x] Webview-based rendering or native editor extension
 - [ ] Language server protocol (LSP) integration for Markdown features
 - [ ] Extension API for third-party plugins to extend functionality
 
 
 ### 15.3 Testing and Quality
-- [ ] Unit tests for core rendering logic
-- [ ] Integration tests for file operations
+- [x] Unit tests for core rendering logic
+- [x] Integration tests for file operations
 - [ ] Performance benchmarks
 - [ ] Automated regression testing
 
@@ -346,10 +346,10 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ## 17. Platform-Specific Requirements
 
 ### 17.1 VS Code
-- [ ] Works on Windows, macOS, Linux
+- [x] Works on Windows, macOS, Linux
 - [ ] Works in VS Code web (vscode.dev) if possible
 - [ ] Works in VS Codium and other VS Code forks
-- [ ] Respects VS Code theme and color tokens
+- [x] Respects VS Code theme and color tokens
 
 
 ***

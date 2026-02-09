@@ -1,0 +1,36 @@
+/* Map VS Code CSS variables to Livemark variables */
+:root {
+  --livemark-bg: var(--vscode-editor-background, #1e1e1e);
+  --livemark-fg: var(--vscode-editor-foreground, #d4d4d4);
+  --livemark-font-family: var(--vscode-editor-font-family, "Segoe UI", sans-serif);
+  --livemark-font-size: var(--vscode-editor-font-size, 14px);
+  --livemark-line-height: var(--vscode-editor-lineHeight, 1.6);
+  --livemark-link-color: var(--vscode-textLink-foreground, #3794ff);
+  --livemark-link-active: var(--vscode-textLink-activeForeground, #3794ff);
+  --livemark-border: var(--vscode-panel-border, #3c3c3c);
+  --livemark-selection: var(--vscode-editor-selectionBackground, #264f78);
+  --livemark-code-bg: var(--vscode-textCodeBlock-background, #2d2d2d);
+  --livemark-code-fg: var(--vscode-editor-foreground, #d4d4d4);
+  --livemark-blockquote-border: var(--vscode-textBlockQuote-border, #007acc);
+  --livemark-blockquote-bg: var(--vscode-textBlockQuote-background, #2d2d2d);
+  --livemark-toolbar-bg: var(--vscode-editorWidget-background, #252526);
+  --livemark-toolbar-fg: var(--vscode-editorWidget-foreground, #cccccc);
+  --livemark-toolbar-border: var(--vscode-editorWidget-border, #454545);
+  --livemark-btn-hover: var(--vscode-toolbar-hoverBackground, #3c3c3c);
+  --livemark-btn-active: var(--vscode-toolbar-activeBackground, #505050);
+  --livemark-focus-border: var(--vscode-focusBorder, #007acc);
+  --livemark-scrollbar: var(--vscode-scrollbarSlider-background, rgba(121, 121, 121, 0.4));
+}
+
+body {
+  background: var(--livemark-bg);
+  color: var(--livemark-fg);
+  font-family: var(--livemark-font-family);
+  font-size: var(--livemark-font-size);
+  margin: 0;
+  padding: 0;
+}
+
+::selection {
+  background: var(--livemark-selection);
+}
