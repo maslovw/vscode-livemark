@@ -1,0 +1,39 @@
+.livemark-image-wrapper {
+  display: block;
+  margin: 1em 0;
+  text-align: center;
+}
+
+.livemark-image-wrapper figure {
+  margin: 0;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.livemark-image-wrapper img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.livemark-image-caption {
+  font-size: 0.85em;
+  color: var(--vscode-descriptionForeground, #888);
+  padding: 4px 8px;
+  text-align: center;
+  font-style: italic;
+  min-height: 1.2em;
+  outline: none;
+}
+
+.livemark-image-caption:empty::before {
+  content: attr(data-placeholder);
+  color: var(--vscode-input-placeholderForeground, #666);
+  pointer-events: none;
+}
+
+.livemark-image-wrapper.selected {
+  outline: 2px solid var(--vscode-focusBorder, #007fd4);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

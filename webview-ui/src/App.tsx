@@ -128,6 +128,49 @@ export const App: React.FC = () => {
         case "setHeading3":
           editor.chain().focus().toggleHeading({ level: 3 }).run();
           break;
+        case "setHeading4":
+          editor.chain().focus().toggleHeading({ level: 4 }).run();
+          break;
+        case "setHeading5":
+          editor.chain().focus().toggleHeading({ level: 5 }).run();
+          break;
+        case "setHeading6":
+          editor.chain().focus().toggleHeading({ level: 6 }).run();
+          break;
+        case "increaseHeadingLevel": {
+          // If paragraph -> H1, if H1 -> H2, ..., if H5 -> H6, if H6 -> stay
+          for (let i = 5; i >= 1; i--) {
+            if (editor.isActive("heading", { level: i })) {
+              editor
+                .chain()
+                .focus()
+                .toggleHeading({ level: (i + 1) as 1 | 2 | 3 | 4 | 5 | 6 })
+                .run();
+              return;
+            }
+          }
+          if (editor.isActive("heading", { level: 6 })) return; // already H6
+          // It's a paragraph - make it H1
+          editor.chain().focus().toggleHeading({ level: 1 }).run();
+          break;
+        }
+        case "decreaseHeadingLevel": {
+          // If H1 -> paragraph, if H2 -> H1, ..., if H6 -> H5, if paragraph -> stay
+          for (let i = 2; i <= 6; i++) {
+            if (editor.isActive("heading", { level: i })) {
+              editor
+                .chain()
+                .focus()
+                .toggleHeading({ level: (i - 1) as 1 | 2 | 3 | 4 | 5 | 6 })
+                .run();
+              return;
+            }
+          }
+          if (editor.isActive("heading", { level: 1 })) {
+            editor.chain().focus().setParagraph().run();
+          }
+          break;
+        }
         case "toggleSourceMode":
           toggleSourceMode();
           break;

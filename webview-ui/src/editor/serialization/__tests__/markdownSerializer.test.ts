@@ -67,6 +67,22 @@ function image(
   return { type: "image", attrs: { src, alt: alt ?? null, title: title ?? null } };
 }
 
+function table(...rows: JSONContent[]): JSONContent {
+  return { type: "table", content: rows };
+}
+
+function tableRow(...cells: JSONContent[]): JSONContent {
+  return { type: "tableRow", content: cells };
+}
+
+function tableHeaderCell(...content: JSONContent[]): JSONContent {
+  return { type: "tableHeader", content: [paragraph(...content)] };
+}
+
+function tableDataCell(...content: JSONContent[]): JSONContent {
+  return { type: "tableCell", content: [paragraph(...content)] };
+}
+
 describe("serializeMarkdown", () => {
   // ---------------------------------------------------------------------------
   // Headings
@@ -347,5 +363,63 @@ describe("serializeMarkdown", () => {
       )
     );
     expect(md.trim()).toBe("Normal **bold** and *italic* text");
+  });
+
+  // ---------------------------------------------------------------------------
+  // Tables
+  // ---------------------------------------------------------------------------
+  it("serializes a simple table", () => {
+    const md = serializeMarkdown(
+      doc(
+        table(
+          tableRow(tableHeaderCell(text("Name")), tableHeaderCell(text("Age"))),
+          tableRow(tableDataCell(text("Alice")), tableDataCell(text("30")))
+        )
+      )
+    );
+    expect(md).toContain("Name");
+    expect(md).toContain("Age");
+    expect(md).toContain("Alice");
+    expect(md).toContain("30");
+    // Should contain pipe characters (GFM table syntax)
+    expect(md).toContain("|");
+    // Should contain the separator line
+    expect(md).toContain("---");
+  });
+
+  it("serializes a table with inline formatting", () => {
+    const md = serializeMarkdown(
+      doc(
+        table(
+          tableRow(
+            tableHeaderCell(text("Feature")),
+            tableHeaderCell(text("Status"))
+          ),
+          tableRow(
+            tableDataCell(text("Bold", [{ type: "bold" }])),
+            tableDataCell(text("italic", [{ type: "italic" }]))
+          )
+        )
+      )
+    );
+    expect(md).toContain("**Bold**");
+    expect(md).toContain("*italic*");
+    expect(md).toContain("|");
+  });
+
+  it("serializes a single-column table", () => {
+    const md = serializeMarkdown(
+      doc(
+        table(
+          tableRow(tableHeaderCell(text("Item"))),
+          tableRow(tableDataCell(text("One"))),
+          tableRow(tableDataCell(text("Two")))
+        )
+      )
+    );
+    expect(md).toContain("Item");
+    expect(md).toContain("One");
+    expect(md).toContain("Two");
+    expect(md).toContain("|");
   });
 });

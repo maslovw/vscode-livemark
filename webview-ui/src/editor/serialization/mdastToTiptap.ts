@@ -193,6 +193,24 @@ function convertNode(
         content: node.value ? [{ type: "text", text: node.value }] : [],
       };
 
+    case "table": {
+      const rows = node.children ?? [];
+      const tiptapRows: JSONContent[] = [];
+      rows.forEach((row, rowIndex) => {
+        const cells = (row.children ?? []).map((cell) => ({
+          type: rowIndex === 0 ? "tableHeader" : "tableCell",
+          content: [
+            {
+              type: "paragraph",
+              content: convertInlineChildren(cell.children ?? [], baseUri),
+            },
+          ],
+        }));
+        tiptapRows.push({ type: "tableRow", content: cells });
+      });
+      return { type: "table", content: tiptapRows };
+    }
+
     case "break":
       return { type: "hardBreak" };
 

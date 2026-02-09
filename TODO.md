@@ -41,10 +41,10 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Auto-links (bare URLs rendered as links)
 - [x] Images (`![alt](path)`) rendered inline
 - [ ] Special command to remove image (with confirmation)
-- [ ] set of buttons: Text stile (choose H1-H6/Text, Bold, Italic, lists, URL, etc)
+- [x] set of buttons: Text stile (choose H1-H6/Text, Bold, Italic, lists, URL, etc)
 
 ### 2.3 Extended Markdown (GitHub Flavored Markdown)
-- [ ] Tables with proper column alignment and borders
+- [x] Tables with proper column alignment and borders
 - [ ] Special menu to format table (add row, add column, etc)
 - [ ] Footnotes
 - [ ] Definition lists
@@ -58,7 +58,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Inline image rendering from local paths
 - [x] Inline image rendering from URLs
 - [x] Image sizing/scaling to fit editor width
-- [ ] Optional image captions (from alt text)
+- [x] Optional image captions (from alt text)
 - [ ] Support common formats: PNG, JPG, GIF, SVG, WebP
 
 ### 3.2 Image Insertion
@@ -83,8 +83,8 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ## 4. Heading and Formatting Commands
 
 ### 4.1 Heading Operations
-- [ ] Keyboard shortcut to convert current line to H1, H2, H3, H4, H5, H6
-- [ ] Increase/decrease heading level (e.g., `Ctrl+]` / `Ctrl+[`)
+- [x] Keyboard shortcut to convert current line to H1, H2, H3, H4, H5, H6
+- [x] Increase/decrease heading level (e.g., `Ctrl+]` / `Ctrl+[`)
 - [x] Remove heading formatting (convert back to paragraph)
 - [x] Visual distinction for each heading level in rendered mode
 
@@ -106,8 +106,8 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ### 4.4 Block Operations
 - [x] Insert block quote
 - [x] Insert horizontal rule
-- [ ] Insert table (with size picker: rows × columns)
-- [ ] Table navigation (Tab to next cell, Shift+Tab to previous)
+- [x] Insert table (with size picker: rows × columns)
+- [x] Table navigation (Tab to next cell, Shift+Tab to previous)
 - [ ] Add/remove table rows and columns
 
 ***

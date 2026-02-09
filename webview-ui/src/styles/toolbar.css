@@ -1,0 +1,48 @@
+/* Toolbar-specific styles */
+
+/* Text style dropdown */
+.livemark-toolbar-select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--livemark-toolbar-border);
+  border-radius: 4px;
+  background: var(--livemark-toolbar-bg);
+  color: var(--livemark-toolbar-fg);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  min-width: 110px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23cccccc' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 20px;
+}
+
+.livemark-toolbar-select:hover {
+  background-color: var(--livemark-btn-hover);
+}
+
+.livemark-toolbar-select:focus {
+  border-color: var(--livemark-focus-border);
+}
+
+.livemark-toolbar-select option {
+  background: var(--livemark-toolbar-bg);
+  color: var(--livemark-toolbar-fg);
+}
+
+/* Toolbar button label styling for link/image/table icons */
+.livemark-toolbar-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* Group label (optional, for accessibility) */
+.livemark-toolbar-group {
+  display: contents;
+}

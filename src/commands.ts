@@ -11,6 +11,11 @@ const COMMANDS = [
   "livemark.setHeading1",
   "livemark.setHeading2",
   "livemark.setHeading3",
+  "livemark.setHeading4",
+  "livemark.setHeading5",
+  "livemark.setHeading6",
+  "livemark.increaseHeadingLevel",
+  "livemark.decreaseHeadingLevel",
   "livemark.toggleSourceMode",
 ] as const;
 
@@ -22,6 +27,11 @@ const COMMAND_MAP: Record<string, string> = {
   "livemark.setHeading1": "setHeading1",
   "livemark.setHeading2": "setHeading2",
   "livemark.setHeading3": "setHeading3",
+  "livemark.setHeading4": "setHeading4",
+  "livemark.setHeading5": "setHeading5",
+  "livemark.setHeading6": "setHeading6",
+  "livemark.increaseHeadingLevel": "increaseHeadingLevel",
+  "livemark.decreaseHeadingLevel": "decreaseHeadingLevel",
   "livemark.toggleSourceMode": "toggleSourceMode",
 };
 

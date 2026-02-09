@@ -114,6 +114,22 @@ describe("roundtrip: parse -> serialize -> parse -> serialize stability", () => 
   it("bold+italic combined", () => {
     assertStableRoundtrip("***bolditalic***");
   });
+
+  it("simple GFM table", () => {
+    assertStableRoundtrip(
+      "| Name | Age |\n| --- | --- |\n| Alice | 30 |\n| Bob | 25 |"
+    );
+  });
+
+  it("GFM table with inline formatting", () => {
+    assertStableRoundtrip(
+      "| Feature | Status |\n| --- | --- |\n| **Bold** | *italic* |\n| `code` | ~~strike~~ |"
+    );
+  });
+
+  it("single-column table", () => {
+    assertStableRoundtrip("| Item |\n| --- |\n| One |\n| Two |");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -323,6 +339,89 @@ describe("mdastToTiptap", () => {
     const result = mdastToTiptap(mdast as any);
     // Unknown nodes are skipped; empty root should give empty paragraph
     expect(result.content).toEqual([{ type: "paragraph" }]);
+  });
+
+  it("converts a table with header and body rows", () => {
+    const mdast = {
+      type: "root",
+      children: [
+        {
+          type: "table",
+          children: [
+            {
+              type: "tableRow",
+              children: [
+                { type: "tableCell", children: [{ type: "text", value: "Name" }] },
+                { type: "tableCell", children: [{ type: "text", value: "Age" }] },
+              ],
+            },
+            {
+              type: "tableRow",
+              children: [
+                { type: "tableCell", children: [{ type: "text", value: "Alice" }] },
+                { type: "tableCell", children: [{ type: "text", value: "30" }] },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const result = mdastToTiptap(mdast as any);
+    const table = result.content![0];
+    expect(table.type).toBe("table");
+    expect(table.content).toHaveLength(2);
+    // First row should have tableHeader cells
+    expect(table.content![0].type).toBe("tableRow");
+    expect(table.content![0].content![0].type).toBe("tableHeader");
+    expect(table.content![0].content![1].type).toBe("tableHeader");
+    // Second row should have tableCell cells
+    expect(table.content![1].content![0].type).toBe("tableCell");
+    expect(table.content![1].content![1].type).toBe("tableCell");
+    // Check cell content
+    expect(table.content![0].content![0].content![0].content![0].text).toBe("Name");
+    expect(table.content![1].content![0].content![0].content![0].text).toBe("Alice");
+  });
+
+  it("converts a table with inline formatting in cells", () => {
+    const mdast = {
+      type: "root",
+      children: [
+        {
+          type: "table",
+          children: [
+            {
+              type: "tableRow",
+              children: [
+                {
+                  type: "tableCell",
+                  children: [
+                    {
+                      type: "strong",
+                      children: [{ type: "text", value: "Bold Header" }],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "tableRow",
+              children: [
+                {
+                  type: "tableCell",
+                  children: [{ type: "text", value: "Normal cell" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const result = mdastToTiptap(mdast as any);
+    const headerCell = result.content![0].content![0].content![0];
+    expect(headerCell.type).toBe("tableHeader");
+    // The header cell should contain a paragraph with bold text
+    expect(headerCell.content![0].type).toBe("paragraph");
+    expect(headerCell.content![0].content![0].marks).toContainEqual({ type: "bold" });
   });
 });
 
@@ -626,5 +725,141 @@ describe("tiptapToMdast", () => {
       content: [{ type: "someUnknownNode" }],
     });
     expect(result.children).toEqual([]);
+  });
+
+  it("converts a table to mdast table", () => {
+    const result = tiptapToMdast({
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableHeader",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Name" }],
+                    },
+                  ],
+                },
+                {
+                  type: "tableHeader",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Age" }],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableCell",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Alice" }],
+                    },
+                  ],
+                },
+                {
+                  type: "tableCell",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "30" }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const table = result.children![0];
+    expect(table.type).toBe("table");
+    expect(table.children).toHaveLength(2);
+    // Both header and body rows use "tableRow" in MDAST
+    expect(table.children![0].type).toBe("tableRow");
+    expect(table.children![1].type).toBe("tableRow");
+    // All cells are "tableCell" in MDAST (header/body distinction doesn't exist)
+    expect(table.children![0].children![0].type).toBe("tableCell");
+    expect(table.children![0].children![0].children![0]).toMatchObject({
+      type: "text",
+      value: "Name",
+    });
+    expect(table.children![1].children![0].children![0]).toMatchObject({
+      type: "text",
+      value: "Alice",
+    });
+  });
+
+  it("converts a table with inline formatting to mdast", () => {
+    const result = tiptapToMdast({
+      type: "doc",
+      content: [
+        {
+          type: "table",
+          content: [
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableHeader",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [
+                        {
+                          type: "text",
+                          text: "Bold",
+                          marks: [{ type: "bold" }],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: "tableRow",
+              content: [
+                {
+                  type: "tableCell",
+                  content: [
+                    {
+                      type: "paragraph",
+                      content: [{ type: "text", text: "Normal" }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const table = result.children![0];
+    expect(table.type).toBe("table");
+    // table > tableRow > tableCell > inline content
+    const headerRow = table.children![0];
+    expect(headerRow.type).toBe("tableRow");
+    const headerCell = headerRow.children![0];
+    expect(headerCell.type).toBe("tableCell");
+    // The inline content of the cell should be a strong node wrapping the text
+    const inlineContent = headerCell.children![0];
+    expect(inlineContent.type).toBe("strong");
+    expect(inlineContent.children![0]).toMatchObject({
+      type: "text",
+      value: "Bold",
+    });
   });
 });

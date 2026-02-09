@@ -144,6 +144,23 @@ function convertNode(
         title: (node.attrs?.title as string) ?? undefined,
       };
 
+    case "table": {
+      const rows = (node.content ?? []).map((row) => ({
+        type: "tableRow" as const,
+        children: (row.content ?? []).map((cell) => ({
+          type: "tableCell" as const,
+          children: convertInlineContent(
+            cell.content?.[0]?.content ?? [],
+            baseUri
+          ),
+        })),
+      }));
+      return {
+        type: "table",
+        children: rows,
+      };
+    }
+
     default:
       return null;
   }

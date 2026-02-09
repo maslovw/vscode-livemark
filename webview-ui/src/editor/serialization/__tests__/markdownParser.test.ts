@@ -338,4 +338,49 @@ describe("parseMarkdown", () => {
     expect(italicNode).toBeDefined();
     expect(italicNode!.text).toBe("italic");
   });
+
+  // ---------------------------------------------------------------------------
+  // Tables (GFM)
+  // ---------------------------------------------------------------------------
+  it("parses a GFM table", () => {
+    const md = "| Name | Age |\n| --- | --- |\n| Alice | 30 |";
+    const doc = parseMarkdown(md);
+    expect(doc.content).toHaveLength(1);
+    const table = doc.content![0];
+    expect(table.type).toBe("table");
+    expect(table.content).toHaveLength(2);
+    // Header row
+    expect(table.content![0].type).toBe("tableRow");
+    expect(table.content![0].content![0].type).toBe("tableHeader");
+    expect(table.content![0].content![1].type).toBe("tableHeader");
+    // Body row
+    expect(table.content![1].content![0].type).toBe("tableCell");
+  });
+
+  it("parses a table with inline formatting in cells", () => {
+    const md =
+      "| Feature | Status |\n| --- | --- |\n| **Bold** | *italic* |";
+    const doc = parseMarkdown(md);
+    const table = doc.content![0];
+    const bodyRow = table.content![1];
+    // First cell should have bold text
+    const boldCell = bodyRow.content![0];
+    const boldContent = boldCell.content![0].content!;
+    expect(boldContent[0].marks).toContainEqual({ type: "bold" });
+    // Second cell should have italic text
+    const italicCell = bodyRow.content![1];
+    const italicContent = italicCell.content![0].content!;
+    expect(italicContent[0].marks).toContainEqual({ type: "italic" });
+  });
+
+  it("parses a table with three columns", () => {
+    const md =
+      "| A | B | C |\n| --- | --- | --- |\n| 1 | 2 | 3 |";
+    const doc = parseMarkdown(md);
+    const table = doc.content![0];
+    expect(table.type).toBe("table");
+    // Each row should have 3 cells
+    expect(table.content![0].content).toHaveLength(3);
+    expect(table.content![1].content).toHaveLength(3);
+  });
 });

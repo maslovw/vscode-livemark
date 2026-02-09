@@ -58,6 +58,26 @@
         "title": "Livemark: Set Heading 3"
       },
       {
+        "command": "livemark.setHeading4",
+        "title": "Livemark: Set Heading 4"
+      },
+      {
+        "command": "livemark.setHeading5",
+        "title": "Livemark: Set Heading 5"
+      },
+      {
+        "command": "livemark.setHeading6",
+        "title": "Livemark: Set Heading 6"
+      },
+      {
+        "command": "livemark.increaseHeadingLevel",
+        "title": "Livemark: Increase Heading Level"
+      },
+      {
+        "command": "livemark.decreaseHeadingLevel",
+        "title": "Livemark: Decrease Heading Level"
+      },
+      {
         "command": "livemark.toggleSourceMode",
         "title": "Livemark: Toggle Source/Rendered Mode"
       },
@@ -95,6 +115,36 @@
         "command": "livemark.setHeading3",
         "key": "ctrl+3",
         "mac": "cmd+3",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.setHeading4",
+        "key": "ctrl+4",
+        "mac": "cmd+4",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.setHeading5",
+        "key": "ctrl+5",
+        "mac": "cmd+5",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.setHeading6",
+        "key": "ctrl+6",
+        "mac": "cmd+6",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.increaseHeadingLevel",
+        "key": "ctrl+]",
+        "mac": "cmd+]",
+        "when": "activeCustomEditorId == livemark.editor"
+      },
+      {
+        "command": "livemark.decreaseHeadingLevel",
+        "key": "ctrl+[",
+        "mac": "cmd+[",
         "when": "activeCustomEditorId == livemark.editor"
       },
       {
