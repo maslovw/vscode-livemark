@@ -31,22 +31,24 @@ export const LivemarkEditor: React.FC<LivemarkEditorProps> = ({
       attributes: {
         class: "livemark-editor-content",
       },
-      handleClick: (_view, _pos, event) => {
-        // Only open links on Ctrl+Click (Cmd+Click on Mac)
-        // Normal clicks place the cursor so the user can edit link text
-        if (!(event.ctrlKey || event.metaKey)) return false;
+      handleDOMEvents: {
+        click: (_view, event) => {
+          const target = (event.target as HTMLElement).closest("a");
+          if (!target) return false;
 
-        const target = event.target as HTMLElement;
-        const link = target.closest("a");
-        if (link) {
-          const href = link.getAttribute("href");
-          if (href) {
-            event.preventDefault();
-            onLinkClick(href);
+          // Open link only on Ctrl+Click (Cmd+Click on Mac)
+          if (event.ctrlKey || event.metaKey) {
+            const href = target.getAttribute("data-href");
+            if (href) {
+              event.preventDefault();
+              onLinkClick(href);
+            }
+            return true;
           }
-          return true;
-        }
-        return false;
+
+          // Normal click — let ProseMirror place the cursor
+          return false;
+        },
       },
     },
   });

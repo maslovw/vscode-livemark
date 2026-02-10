@@ -14,13 +14,11 @@ Identified during architecture review. No fixes applied — tracking only.
 
 ---
 
-### 2. 300ms Debounce Can Lose Content on Tab Close
+### ~~2. 300ms Debounce Can Lose Content on Tab Close~~ ✅ FIXED
 
-**File:** `webview-ui/src/hooks/useEditorContent.ts` (L47)
+**File:** `webview-ui/src/hooks/useEditorContent.ts`
 
-`handleUpdate` debounces content posting by 300ms. If the user types and closes the tab within that window, the pending update is never sent. There is no `beforeunload` or dispose handler in the webview to flush the debounced write.
-
-**Risk:** Silent data loss.
+**Fix:** Added a `flush()` function that immediately cancels any pending debounce timer and sends the current editor content. Registered a `beforeunload` event listener inside the hook that calls `flush()` when the webview is torn down, and also flushes on React unmount via the `useEffect` cleanup. The hook now tracks the editor instance via a ref and exposes `flush` to callers.
 
 ---
 
@@ -175,7 +173,7 @@ Users cannot split-view two Livemark editors on the same file. Enabling this wou
 
 | Severity | Count | Key Themes |
 |----------|-------|------------|
-| Critical | 3 (1 fixed) | Sync race conditions, data loss, undo conflict |
+| Critical | 3 (2 fixed) | Sync race conditions, data loss, undo conflict |
 | High | 4 | Multi-editor routing, source mode gaps, message drift, image paths |
 | Medium | 5 | Stale closures, timing hacks, code duplication, error handling |
 | Low | 4 | Accessibility, CSP, layout, feature limits |

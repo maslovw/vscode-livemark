@@ -99,7 +99,7 @@ export const App: React.FC = () => {
     )
   );
 
-  const { loadContent, handleUpdate } = useEditorContent({
+  const { loadContent, handleUpdate, flush } = useEditorContent({
     postMessage,
     baseUri,
   });

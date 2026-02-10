@@ -55,12 +55,12 @@
   margin: 0.5em 0;
 }
 
-/* Links */
+/* Links – Ctrl+Click to follow, normal click places cursor */
 .livemark-editor-content a,
 .livemark-editor-content .livemark-link {
   color: var(--livemark-link-color);
   text-decoration: none;
-  cursor: pointer;
+  cursor: text;
 }
 
 .livemark-editor-content a:hover,

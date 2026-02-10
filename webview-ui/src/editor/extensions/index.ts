@@ -1,5 +1,6 @@
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import { mergeAttributes } from "@tiptap/core";
 import { ImageWithCaption } from "./ImageWithCaption";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
@@ -36,7 +37,18 @@ export function createExtensions({
         class: "livemark-code-block",
       },
     }),
-    Link.configure({
+    Link.extend({
+      // Render the URL in data-href instead of href so the
+      // VS Code webview doesn't intercept clicks and open them externally.
+      renderHTML({ HTMLAttributes }) {
+        const { href, ...rest } = HTMLAttributes;
+        return [
+          "a",
+          mergeAttributes(rest, { "data-href": href }),
+          0,
+        ];
+      },
+    }).configure({
       openOnClick: false,
       autolink: true,
       HTMLAttributes: {
