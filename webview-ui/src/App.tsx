@@ -3,6 +3,8 @@ import type { Editor } from "@tiptap/react";
 import { LivemarkEditor } from "./editor/LivemarkEditor";
 import { Toolbar } from "./components/Toolbar";
 import { ModeToggle } from "./components/ModeToggle";
+import { LayoutSelector } from "./components/LayoutSelector";
+import { ResizeHandles } from "./components/ResizeHandles";
 import { useVSCodeMessaging } from "./hooks/useVSCodeMessaging";
 import { useEditorContent } from "./hooks/useEditorContent";
 import { useTheme } from "./hooks/useTheme";
@@ -19,6 +21,9 @@ export const App: React.FC = () => {
   const [sourceText, setSourceText] = useState("");
   const [baseUri, setBaseUri] = useState<string | undefined>(undefined);
   const [version, setVersion] = useState<string>("");
+  const [alignment, setAlignment] = useState<string>("center");
+  const [width, setWidth] = useState<string>("compact");
+  const [contentWidth, setContentWidth] = useState<number>(800);
   const baseUriRef = useRef<string | undefined>(undefined);
   const { applyTheme } = useTheme();
 
@@ -34,6 +39,9 @@ export const App: React.FC = () => {
             setBaseUri(message.baseUri);
             baseUriRef.current = message.baseUri;
             setVersion(message.version ?? "");
+            setAlignment(message.alignment || "center");
+            setWidth(message.width || "compact");
+            setContentWidth(message.contentWidth || 800);
             setSourceText(message.text);
             if (editorRef.current) {
               loadContent(editorRef.current, message.text);
@@ -77,6 +85,12 @@ export const App: React.FC = () => {
           }
           case "ext:executeCommand": {
             handleCommand(message.command);
+            break;
+          }
+          case "ext:layoutChanged": {
+            setAlignment(message.alignment);
+            setWidth(message.width);
+            setContentWidth(message.contentWidth);
             break;
           }
         }
@@ -233,6 +247,36 @@ export const App: React.FC = () => {
     [postMessage]
   );
 
+  const handleAlignmentChange = useCallback(
+    (newAlignment: string) => {
+      setAlignment(newAlignment);
+      postMessage({ type: "webview:setLayout", alignment: newAlignment });
+    },
+    [postMessage]
+  );
+
+  const handleWidthChange = useCallback(
+    (newWidth: string) => {
+      setWidth(newWidth);
+      postMessage({ type: "webview:setLayout", width: newWidth });
+    },
+    [postMessage]
+  );
+
+  const handleContentWidthChange = useCallback((newWidth: number) => {
+    setContentWidth(newWidth);
+  }, []);
+
+  const handleContentWidthResizeEnd = useCallback(
+    (newWidth: number) => {
+      postMessage({
+        type: "webview:setLayout",
+        contentWidth: newWidth,
+      });
+    },
+    [postMessage]
+  );
+
   if (!isReady) {
     return <div className="livemark-loading">Loading...</div>;
   }
@@ -241,10 +285,30 @@ export const App: React.FC = () => {
     <div className="livemark-container">
       <div className="livemark-toolbar">
         {!isSourceMode && <Toolbar editor={editorInstance} />}
+        {!isSourceMode && (
+          <>
+            <span className="livemark-toolbar-separator" />
+            <LayoutSelector
+              alignment={alignment}
+              width={width}
+              onAlignmentChange={handleAlignmentChange}
+              onWidthChange={handleWidthChange}
+            />
+          </>
+        )}
         {version && <span className="livemark-version">v{version}</span>}
         <ModeToggle isSourceMode={isSourceMode} onToggle={toggleSourceMode} />
       </div>
-      <div className="livemark-editor-area">
+      <div
+        className="livemark-editor-area"
+        data-alignment={alignment}
+        data-width={width}
+        style={
+          width === "resizable"
+            ? ({ "--livemark-content-width": `${contentWidth}px` } as React.CSSProperties)
+            : undefined
+        }
+      >
         {isSourceMode ? (
           <textarea
             className="livemark-source-editor"
@@ -253,13 +317,22 @@ export const App: React.FC = () => {
             spellCheck={false}
           />
         ) : (
-          <LivemarkEditor
-            onUpdate={handleUpdate}
-            onReady={handleEditorReady}
-            onImagePaste={handleImagePaste}
-            onLinkClick={handleLinkClick}
-            editorRef={editorRef}
-          />
+          <>
+            <LivemarkEditor
+              onUpdate={handleUpdate}
+              onReady={handleEditorReady}
+              onImagePaste={handleImagePaste}
+              onLinkClick={handleLinkClick}
+              editorRef={editorRef}
+            />
+            {width === "resizable" && (
+              <ResizeHandles
+                contentWidth={contentWidth}
+                onWidthChange={handleContentWidthChange}
+                onResizeEnd={handleContentWidthResizeEnd}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

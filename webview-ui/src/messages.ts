@@ -6,6 +6,9 @@ export interface InitMessage {
   theme: "light" | "dark" | "high-contrast";
   baseUri: string;
   version: string;
+  alignment: string;
+  width: string;
+  contentWidth: number;
 }
 
 export interface DocumentChangedMessage {
@@ -28,12 +31,20 @@ export interface ExecuteCommandMessage {
   command: string;
 }
 
+export interface LayoutChangedMessage {
+  type: "ext:layoutChanged";
+  alignment: string;
+  width: string;
+  contentWidth: number;
+}
+
 export type ExtensionMessage =
   | InitMessage
   | DocumentChangedMessage
   | ThemeChangedMessage
   | ImageSavedMessage
-  | ExecuteCommandMessage;
+  | ExecuteCommandMessage
+  | LayoutChangedMessage;
 
 export interface WebviewReadyMessage {
   type: "webview:ready";
@@ -65,10 +76,18 @@ export interface OpenImageMessage {
   imagePath: string;
 }
 
+export interface SetLayoutMessage {
+  type: "webview:setLayout";
+  alignment?: string;
+  width?: string;
+  contentWidth?: number;
+}
+
 export type WebviewMessage =
   | WebviewReadyMessage
   | ContentChangedMessage
   | PasteImageMessage
   | OpenLinkMessage
   | DeleteImageMessage
-  | OpenImageMessage;
+  | OpenImageMessage
+  | SetLayoutMessage;

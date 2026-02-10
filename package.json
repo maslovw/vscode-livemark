@@ -2,7 +2,7 @@
   "name": "livemark",
   "displayName": "Livemark",
   "description": "WYSIWYG Markdown editor for VS Code",
-  "version": "0.1.27",
+  "version": "0.1.31",
   "publisher": "livemark",
   "engines": {
     "vscode": "^1.80.0"
@@ -192,6 +192,43 @@
           "type": "boolean",
           "default": false,
           "description": "When true, shows a dialog to confirm/edit the image path and filename before saving pasted images."
+        },
+        "livemark.alignment": {
+          "type": "string",
+          "default": "center",
+          "enum": [
+            "center",
+            "left"
+          ],
+          "enumDescriptions": [
+            "Content is centered horizontally",
+            "Content is aligned to the left"
+          ],
+          "description": "Horizontal alignment for the rendered markdown view."
+        },
+        "livemark.width": {
+          "type": "string",
+          "default": "compact",
+          "enum": [
+            "compact",
+            "wide",
+            "fit",
+            "resizable"
+          ],
+          "enumDescriptions": [
+            "Compact width (800px, scrollable if viewport is narrower)",
+            "Wide width (1200px, scrollable if viewport is narrower)",
+            "Fit to visible window width",
+            "Resizable width (drag edges to resize, 400–2400px)"
+          ],
+          "description": "Content width mode for the rendered markdown view."
+        },
+        "livemark.contentWidth": {
+          "type": "number",
+          "default": 800,
+          "minimum": 400,
+          "maximum": 2400,
+          "description": "Content width in pixels when using the 'resizable' width mode."
         }
       }
     }

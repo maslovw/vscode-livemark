@@ -5,7 +5,7 @@ import { getCurrentTheme, onThemeChange } from "./ThemeSync";
 import { saveImage, deleteImageFromDisk, generateImagePath, saveImageWithPath } from "./ImageHandler";
 import { setActiveWebview } from "./commands";
 import type { ExtensionMessage, WebviewMessage } from "./messages";
-import { getConfirmImagePath } from "./config";
+import { getConfirmImagePath, getAlignment, getWidthMode, getContentWidth } from "./config";
 
 export class LivemarkEditorProvider
   implements vscode.CustomTextEditorProvider
@@ -49,6 +49,7 @@ export class LivemarkEditorProvider
 
     // Track if we should suppress the next external change
     let suppressNextExternalChange = false;
+    let suppressLayoutChange = false;
 
     // Post typed message helper
     const postMessage = (message: ExtensionMessage): boolean => {
@@ -73,6 +74,9 @@ export class LivemarkEditorProvider
               theme: getCurrentTheme(),
               baseUri: webview.asWebviewUri(docDirUri).toString(),
               version: extVersion,
+              alignment: getAlignment(),
+              width: getWidthMode(),
+              contentWidth: getContentWidth(),
             });
             break;
           }
@@ -198,6 +202,21 @@ export class LivemarkEditorProvider
             }
             break;
           }
+          case "webview:setLayout": {
+            suppressLayoutChange = true;
+            const config = vscode.workspace.getConfiguration("livemark");
+            if (message.alignment) {
+              await config.update("alignment", message.alignment, vscode.ConfigurationTarget.Global);
+            }
+            if (message.width) {
+              await config.update("width", message.width, vscode.ConfigurationTarget.Global);
+            }
+            if (message.contentWidth !== undefined) {
+              await config.update("contentWidth", message.contentWidth, vscode.ConfigurationTarget.Global);
+            }
+            setTimeout(() => { suppressLayoutChange = false; }, 200);
+            break;
+          }
         }
       }
     );
@@ -227,6 +246,23 @@ export class LivemarkEditorProvider
       });
     });
 
+    // Handle layout config changes
+    const configDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
+      if (
+        e.affectsConfiguration("livemark.alignment") ||
+        e.affectsConfiguration("livemark.width") ||
+        e.affectsConfiguration("livemark.contentWidth")
+      ) {
+        if (suppressLayoutChange) return;
+        postMessage({
+          type: "ext:layoutChanged",
+          alignment: getAlignment(),
+          width: getWidthMode(),
+          contentWidth: getContentWidth(),
+        });
+      }
+    });
+
     // Track active panel for commands
     const visibilityDisposable = webviewPanel.onDidChangeViewState(() => {
       if (webviewPanel.active) {
@@ -241,6 +277,7 @@ export class LivemarkEditorProvider
       changeDisposable.dispose();
       themeDisposable.dispose();
       visibilityDisposable.dispose();
+      configDisposable.dispose();
     });
   }
 
