@@ -10,6 +10,7 @@ export interface InitMessage {
   width: string;
   contentWidth: number;
   toolbarContextMode: string;
+  showLayoutControls: boolean;
 }
 
 export interface DocumentChangedMessage {
@@ -38,6 +39,7 @@ export interface LayoutChangedMessage {
   width: string;
   contentWidth: number;
   toolbarContextMode: string;
+  showLayoutControls: boolean;
 }
 
 export type ExtensionMessage =

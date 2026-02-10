@@ -2,7 +2,7 @@
   "name": "livemark",
   "displayName": "Livemark",
   "description": "WYSIWYG Markdown editor for VS Code",
-  "version": "0.1.46",
+  "version": "0.1.47",
   "publisher": "livemark",
   "engines": {
     "vscode": "^1.80.0"
@@ -242,6 +242,11 @@
             "Irrelevant buttons are hidden entirely"
           ],
           "description": "How context-irrelevant toolbar buttons behave."
+        },
+        "livemark.showLayoutControls": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show alignment and width selectors in the toolbar."
         }
       }
     }

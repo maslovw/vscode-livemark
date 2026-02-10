@@ -5,7 +5,7 @@ import { getCurrentTheme, onThemeChange } from "./ThemeSync";
 import { saveImage, deleteImageFromDisk, generateImagePath, saveImageWithPath } from "./ImageHandler";
 import { setActiveWebview } from "./commands";
 import type { ExtensionMessage, WebviewMessage } from "./messages";
-import { getConfirmImagePath, getAlignment, getWidthMode, getContentWidth, getToolbarContextMode } from "./config";
+import { getConfirmImagePath, getAlignment, getWidthMode, getContentWidth, getToolbarContextMode, getShowLayoutControls } from "./config";
 
 export class LivemarkEditorProvider
   implements vscode.CustomTextEditorProvider
@@ -79,6 +79,7 @@ export class LivemarkEditorProvider
               width: getWidthMode(),
               contentWidth: getContentWidth(),
               toolbarContextMode: getToolbarContextMode(),
+              showLayoutControls: getShowLayoutControls(),
             });
             break;
           }
@@ -259,7 +260,8 @@ export class LivemarkEditorProvider
         e.affectsConfiguration("livemark.alignment") ||
         e.affectsConfiguration("livemark.width") ||
         e.affectsConfiguration("livemark.contentWidth") ||
-        e.affectsConfiguration("livemark.toolbarContextMode")
+        e.affectsConfiguration("livemark.toolbarContextMode") ||
+        e.affectsConfiguration("livemark.showLayoutControls")
       ) {
         if (pendingLayoutChanges > 0) {
           pendingLayoutChanges--;
@@ -271,6 +273,7 @@ export class LivemarkEditorProvider
           width: getWidthMode(),
           contentWidth: getContentWidth(),
           toolbarContextMode: getToolbarContextMode(),
+          showLayoutControls: getShowLayoutControls(),
         });
       }
     });

@@ -26,6 +26,7 @@ export const App: React.FC = () => {
   const [width, setWidth] = useState<string>("compact");
   const [contentWidth, setContentWidth] = useState<number>(800);
   const [toolbarContextMode, setToolbarContextMode] = useState<string>("disable");
+  const [showLayoutControls, setShowLayoutControls] = useState<boolean>(true);
   const baseUriRef = useRef<string | undefined>(undefined);
   const { applyTheme } = useTheme();
 
@@ -45,6 +46,7 @@ export const App: React.FC = () => {
             setWidth(message.width || "compact");
             setContentWidth(message.contentWidth || 800);
             setToolbarContextMode(message.toolbarContextMode || "disable");
+            setShowLayoutControls(message.showLayoutControls !== false);
             setSourceText(message.text);
             if (editorRef.current) {
               loadContent(editorRef.current, message.text);
@@ -95,6 +97,7 @@ export const App: React.FC = () => {
             setWidth(message.width);
             setContentWidth(message.contentWidth);
             setToolbarContextMode(message.toolbarContextMode || "disable");
+            setShowLayoutControls(message.showLayoutControls !== false);
             break;
           }
         }
@@ -317,7 +320,7 @@ export const App: React.FC = () => {
     <div className="livemark-container">
       <div className="livemark-toolbar">
         {!isSourceMode && <Toolbar editor={editorInstance} toolbarContextMode={toolbarContextMode} />}
-        {!isSourceMode && (
+        {!isSourceMode && showLayoutControls && (
           <>
             <span className="livemark-toolbar-separator" />
             <LayoutSelector

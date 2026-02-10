@@ -46,3 +46,9 @@ export function getToolbarContextMode(): ToolbarContextMode {
     .getConfiguration("livemark")
     .get<ToolbarContextMode>("toolbarContextMode", "disable");
 }
+
+export function getShowLayoutControls(): boolean {
+  return vscode.workspace
+    .getConfiguration("livemark")
+    .get<boolean>("showLayoutControls", true);
+}
