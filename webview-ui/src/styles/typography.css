@@ -69,6 +69,12 @@
   text-decoration: underline;
 }
 
+/* Ctrl held — show pointer cursor on links (Ctrl+Click to follow) */
+.livemark-ctrl-held a,
+.livemark-ctrl-held .livemark-link {
+  cursor: pointer;
+}
+
 /* Code */
 .livemark-editor-content code {
   background: var(--livemark-code-bg);

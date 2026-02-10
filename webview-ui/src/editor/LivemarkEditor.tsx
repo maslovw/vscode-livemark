@@ -61,5 +61,33 @@ export const LivemarkEditor: React.FC<LivemarkEditorProps> = ({
     };
   }, [editor, editorRef]);
 
+  // Toggle a CSS class when Ctrl (or Cmd) is held so links show a pointer cursor
+  React.useEffect(() => {
+    const root = editor?.view?.dom;
+    if (!root) return;
+
+    const add = (e: KeyboardEvent) => {
+      if (e.key === "Control" || e.key === "Meta") {
+        root.classList.add("livemark-ctrl-held");
+      }
+    };
+    const remove = (e: KeyboardEvent) => {
+      if (e.key === "Control" || e.key === "Meta") {
+        root.classList.remove("livemark-ctrl-held");
+      }
+    };
+    const clear = () => root.classList.remove("livemark-ctrl-held");
+
+    document.addEventListener("keydown", add);
+    document.addEventListener("keyup", remove);
+    window.addEventListener("blur", clear);
+
+    return () => {
+      document.removeEventListener("keydown", add);
+      document.removeEventListener("keyup", remove);
+      window.removeEventListener("blur", clear);
+    };
+  }, [editor]);
+
   return <EditorContent editor={editor} />;
 };
