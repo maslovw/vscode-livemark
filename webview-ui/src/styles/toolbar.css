@@ -46,3 +46,52 @@
 .livemark-toolbar-group {
   display: contents;
 }
+
+/* Disabled toolbar buttons */
+.livemark-toolbar-btn.disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.livemark-toolbar-select:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Toolbar dropdown menu */
+.livemark-toolbar-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.livemark-toolbar-menu-dropdown {
+  position: fixed;
+  z-index: 100;
+  min-width: 160px;
+  background: var(--livemark-toolbar-bg);
+  border: 1px solid var(--livemark-toolbar-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 4px 0;
+}
+
+.livemark-toolbar-menu-item {
+  display: block;
+  width: 100%;
+  padding: 4px 12px;
+  border: none;
+  background: none;
+  color: var(--livemark-toolbar-fg);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.livemark-toolbar-menu-item:hover {
+  background: var(--livemark-btn-hover);
+}
+
+.livemark-toolbar-menu-item.danger:hover {
+  color: var(--vscode-errorForeground, #f44747);
+}

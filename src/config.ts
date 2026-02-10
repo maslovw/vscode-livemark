@@ -38,3 +38,11 @@ export function getContentWidth(): number {
     .getConfiguration("livemark")
     .get<number>("contentWidth", 800);
 }
+
+export type ToolbarContextMode = "disable" | "hide";
+
+export function getToolbarContextMode(): ToolbarContextMode {
+  return vscode.workspace
+    .getConfiguration("livemark")
+    .get<ToolbarContextMode>("toolbarContextMode", "disable");
+}

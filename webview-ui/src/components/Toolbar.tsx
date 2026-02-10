@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { Editor } from "@tiptap/react";
+import { NodeSelection } from "@tiptap/pm/state";
 import { InlineDialog } from "./InlineDialog";
 import type { InlineDialogField } from "./InlineDialog";
+import { ToolbarMenu } from "./ToolbarMenu";
 
 interface ToolbarProps {
   editor: Editor | null;
+  toolbarContextMode: string;
 }
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -26,10 +29,15 @@ function getActiveStateKey(editor: Editor): string {
   ] as const) {
     if (editor.isActive(mark)) parts.push(mark);
   }
+  // Context flags for re-render on selection type changes
+  const { selection } = editor.state;
+  if (selection instanceof NodeSelection && selection.node.type.name === "image") {
+    parts.push("ctx:image");
+  }
   return parts.join(",");
 }
 
-export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
+export const Toolbar: React.FC<ToolbarProps> = ({ editor, toolbarContextMode }) => {
   // Only re-render when the set of *active* formatting marks actually changes,
   // so that opening a <select> dropdown isn't disrupted by unrelated transactions.
   const [, setStateKey] = useState("");
@@ -56,8 +64,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
 
   if (!editor) return null;
 
-  const btnClass = (active: boolean) =>
-    `livemark-toolbar-btn${active ? " active" : ""}`;
+  // Context detection
+  const { selection } = editor.state;
+  const isImageSelected = selection instanceof NodeSelection && selection.node.type.name === "image";
+  const isInTable = editor.isActive("table");
+  const isInCodeBlock = editor.isActive("codeBlock");
+  const textFormattingDisabled = isImageSelected || isInCodeBlock;
+
+  const hideMode = toolbarContextMode === "hide";
+
+  const btnClass = (active: boolean, disabled?: boolean) =>
+    `livemark-toolbar-btn${active ? " active" : ""}${disabled ? " disabled" : ""}`;
 
   /** Determine the current text style value for the dropdown. */
   const getCurrentTextStyle = (): string => {
@@ -166,57 +183,79 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
   const canInsertTable =
     typeof (editor.commands as any).insertTable === "function";
 
+  const tableSvg = (
+    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+      <path d="M0 2v12h16V2H0zm1 1h4v3H1V3zm5 0h4v3H6V3zm5 0h4v3h-4V3zM1 7h4v3H1V7zm5 0h4v3H6V7zm5 0h4v3h-4V7zM1 11h4v2H1v-2zm5 0h4v2H6v-2zm5 0h4v2h-4v-2z" />
+    </svg>
+  );
+
+  // Text formatting section (select + bold/italic/strike/code)
+  const renderTextFormatting = () => {
+    if (hideMode && textFormattingDisabled) return null;
+
+    return (
+      <>
+        {/* Text Style Dropdown */}
+        <select
+          className="livemark-toolbar-select"
+          value={getCurrentTextStyle()}
+          onChange={handleTextStyleChange}
+          title="Text Style"
+          disabled={textFormattingDisabled}
+        >
+          <option value="paragraph">Paragraph</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+          <option value="h4">Heading 4</option>
+          <option value="h5">Heading 5</option>
+          <option value="h6">Heading 6</option>
+        </select>
+
+        <span className="livemark-toolbar-separator" />
+
+        {/* Inline Formatting Group */}
+        <button
+          className={btnClass(editor.isActive("bold"), textFormattingDisabled)}
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          title="Bold (Cmd+B)"
+          aria-disabled={textFormattingDisabled}
+        >
+          B
+        </button>
+        <button
+          className={btnClass(editor.isActive("italic"), textFormattingDisabled)}
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          title="Italic (Cmd+I)"
+          aria-disabled={textFormattingDisabled}
+        >
+          <em>I</em>
+        </button>
+        <button
+          className={btnClass(editor.isActive("strike"), textFormattingDisabled)}
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          title="Strikethrough (Cmd+Shift+X)"
+          aria-disabled={textFormattingDisabled}
+        >
+          <s>S</s>
+        </button>
+        <button
+          className={btnClass(editor.isActive("code"), textFormattingDisabled)}
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          title="Inline Code (Cmd+E)"
+          aria-disabled={textFormattingDisabled}
+        >
+          {"<>"}
+        </button>
+
+        <span className="livemark-toolbar-separator" />
+      </>
+    );
+  };
+
   return (
     <div className="livemark-toolbar-group" style={{ display: "contents" }}>
-      {/* Text Style Dropdown */}
-      <select
-        className="livemark-toolbar-select"
-        value={getCurrentTextStyle()}
-        onChange={handleTextStyleChange}
-        title="Text Style"
-      >
-        <option value="paragraph">Paragraph</option>
-        <option value="h1">Heading 1</option>
-        <option value="h2">Heading 2</option>
-        <option value="h3">Heading 3</option>
-        <option value="h4">Heading 4</option>
-        <option value="h5">Heading 5</option>
-        <option value="h6">Heading 6</option>
-      </select>
-
-      <span className="livemark-toolbar-separator" />
-
-      {/* Inline Formatting Group */}
-      <button
-        className={btnClass(editor.isActive("bold"))}
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        title="Bold (Cmd+B)"
-      >
-        B
-      </button>
-      <button
-        className={btnClass(editor.isActive("italic"))}
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        title="Italic (Cmd+I)"
-      >
-        <em>I</em>
-      </button>
-      <button
-        className={btnClass(editor.isActive("strike"))}
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        title="Strikethrough (Cmd+Shift+X)"
-      >
-        <s>S</s>
-      </button>
-      <button
-        className={btnClass(editor.isActive("code"))}
-        onClick={() => editor.chain().focus().toggleCode().run()}
-        title="Inline Code (Cmd+E)"
-      >
-        {"<>"}
-      </button>
-
-      <span className="livemark-toolbar-separator" />
+      {renderTextFormatting()}
 
       {/* List Group */}
       <button
@@ -265,16 +304,27 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
       >
         &mdash;
       </button>
-      {canInsertTable && (
+      {canInsertTable && !isInTable && (
         <button
-          className={btnClass(editor.isActive("table"))}
+          className={btnClass(false)}
           onClick={handleInsertTable}
           title="Insert Table"
         >
-          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-            <path d="M0 2v12h16V2H0zm1 1h4v3H1V3zm5 0h4v3H6V3zm5 0h4v3h-4V3zM1 7h4v3H1V7zm5 0h4v3H6V7zm5 0h4v3h-4V7zM1 11h4v2H1v-2zm5 0h4v2H6v-2zm5 0h4v2h-4v-2z" />
-          </svg>
+          {tableSvg}
         </button>
+      )}
+      {canInsertTable && isInTable && (
+        <ToolbarMenu
+          trigger={tableSvg}
+          title="Table"
+          items={[
+            { label: "Add Row Below", action: () => (editor.chain().focus() as any).addRowAfter().run() },
+            { label: "Add Column Right", action: () => (editor.chain().focus() as any).addColumnAfter().run() },
+            { label: "Delete Row", action: () => (editor.chain().focus() as any).deleteRow().run() },
+            { label: "Delete Column", action: () => (editor.chain().focus() as any).deleteColumn().run() },
+            { label: "Delete Table", action: () => (editor.chain().focus() as any).deleteTable().run(), danger: true },
+          ]}
+        />
       )}
 
       <span className="livemark-toolbar-separator" />

@@ -50,7 +50,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ### 2.3 Extended Markdown (GitHub Flavored Markdown)
 
 - [x] Tables with proper column alignment and borders
-- [ ] Special menu to format table (add row, add column, etc)
+- [x] Special menu to format table (add row, add column, etc)
 - [ ] Footnotes
 - [ ] Definition lists
 - [x] Syntax highlighting in fenced code blocks with language identifiers
@@ -120,7 +120,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Insert horizontal rule
 - [x] Insert table (with size picker: rows × columns)
 - [x] Table navigation (Tab to next cell, Shift+Tab to previous)
-- [ ] Add/remove table rows and columns
+- [x] Add/remove table rows and columns
 
 ---
 
