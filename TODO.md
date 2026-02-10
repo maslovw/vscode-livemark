@@ -9,8 +9,8 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Edit Markdown content with live rendering (no separate preview pane required)
 - [x] Hide raw Markdown syntax (`#`, `**`, `[]()`, etc.) during editing or show minimally/inline
 - [x] Option to toggle between rendered view and raw Markdown source
-- [ ] Cursor positioning works correctly in rendered mode (not confused by concealed syntax)
-- [ ] Selection/highlighting works properly across rendered elements
+- [x] Cursor positioning works correctly in rendered mode (not confused by concealed syntax)
+- [x] Selection/highlighting works properly across rendered elements
 
 ### 1.2 Modal Behavior (optional but recommended)
 
@@ -29,7 +29,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Block quotes with visual indentation/border
 - [x] Code blocks with syntax highlighting (language-specific)
 - [x] Horizontal rules (rendered as visual separators)
-- [ ] Lists:
+- [x] Lists:
   - [x] Unordered (bullet) lists
   - [x] Ordered (numbered) lists
   - [x] Nested lists with proper indentation
@@ -44,7 +44,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Links (`[text](url)`) rendered as clickable hyperlinks
 - [x] Auto-links (bare URLs rendered as links)
 - [x] Images (`![alt](path)`) rendered inline
-- [ ] Special command to remove image (with confirmation)
+- [x] Special command to remove image (with confirmation)
 - [x] set of buttons: Text stile (choose H1-H6/Text, Bold, Italic, lists, URL, etc)
 
 ### 2.3 Extended Markdown (GitHub Flavored Markdown)
@@ -65,7 +65,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 - [x] Inline image rendering from URLs
 - [x] Image sizing/scaling to fit editor width
 - [x] Optional image captions (from alt text)
-- [ ] Support common formats: PNG, JPG, GIF, SVG, WebP
+- [x] Support common formats: PNG, JPG, GIF, SVG, WebP
 
 ### 3.2 Image Insertion
 
@@ -74,16 +74,16 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
   - [x] Auto-insert Markdown image syntax with correct relative path
   - [x] Configurable naming scheme (timestamp, hash, custom pattern)
 - [x] **Drag and drop** image files into editor
-  - [ ] Copy/move file to assets folder
-  - [ ] Insert Markdown reference
+  - [x] Copy/move file to assets folder
+  - [x] Insert Markdown reference
 - [ ] Insert image via file picker dialog
-- [ ] Insert image via URL (direct link)
+- [x] Insert image via URL (direct link)
 
 ### 3.3 Image Management
 
-- [ ] Click on image to open in system viewer or enlarge
+- [x] Click on image to open in system viewer or enlarge
 - [ ] Option to resize images (width/height attributes or CSS)
-- [ ] Delete image file when Markdown reference is removed (optional, with confirmation)
+- [x] Delete image file when Markdown reference is removed (optional, with confirmation)
 - [ ] Update image paths when files are moved/renamed
 
 ---
@@ -204,7 +204,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 
 ### 8.2 Metadata / Front Matter
 
-- [ ] Parse YAML front matter (title, date, tags, etc.)
+- [x] Parse YAML front matter (title, date, tags, etc.)
 - [ ] Display metadata in a dedicated section or panel
 - [ ] Edit front matter in a form UI (optional)
 
@@ -306,7 +306,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 
 ### 12.3 Visual Accessibility
 
-- [ ] High contrast mode support
+- [x] High contrast mode support
 - [ ] Respects system font size settings
 - [ ] Color blind friendly color schemes
 
@@ -337,22 +337,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 
 ## 14. Collaboration and Sync (Optional, Advanced)
 
-### 14.1 Version Control Integration
-
-- [ ] Git status indicators in file list
-- [ ] Diff view for Markdown changes
-- [ ] Commit and push from within editor
-
-### 14.2 Real-time Collaboration
-
-- [ ] Live cursors showing collaborator positions
-- [ ] Operational transform or CRDT for conflict-free editing
-- [ ] Comments and annotations
-
-### 14.3 Cloud Sync
-
-- [ ] Sync with cloud storage (Dropbox, iCloud, Google Drive)
-- [ ] Conflict resolution UI
+- nothing to be done
 
 ---
 
