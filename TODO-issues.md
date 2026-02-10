@@ -50,23 +50,19 @@ TipTap maintains its own undo history; `vscode.workspace.applyEdit` pushes to VS
 
 ---
 
-### 6. Two Copies of `messages.ts` — Manual Sync
+### ~~6. Two Copies of `messages.ts` — Manual Sync~~ ✅ FIXED
 
 **Files:** `src/messages.ts`, `webview-ui/src/messages.ts`
 
-These are separate files that must be kept in sync by hand. No build-time validation, no shared package, no codegen. A drift (e.g., adding a field to one side but not the other) causes silent runtime failures with no type error at build time.
-
-**Risk:** Runtime message handling bugs after one-sided edits.
+**Fix:** Made `src/messages.ts` the single source of truth. The webview's `messages.ts` is now a one-line re-export (`export * from "../../src/messages"`) instead of a full duplicate. The webview `tsconfig.json` includes the extension source file for type-checking. Both Vite and esbuild resolve the cross-directory import at bundle time, so any drift between sides is now impossible.
 
 ---
 
-### 7. Image URL Un-resolution Is Fragile
+### ~~7. Image URL Un-resolution Is Fragile~~ ✅ FIXED
 
-**File:** `webview-ui/src/editor/serialization/tiptapToMdast.ts` (L22–L80)
+**File:** `webview-ui/src/editor/serialization/tiptapToMdast.ts`
 
-`unresolveImageUrl` uses a multi-strategy approach: URL parsing, pathname matching, segment heuristics, prefix stripping. The fallback heuristic (finding "relative portions by common segments") is unreliable for deeply nested documents. The `originalSrc` attribute was added to bypass this, but images inserted via the toolbar URL dialog set `originalSrc = url` identically to `src`, which is correct for remote URLs but wrong for user-typed relative paths.
-
-**Risk:** Corrupted image paths on save for edge-case directory structures.
+**Fix:** The inline image serialization path in `convertInlineContent` now uses `originalSrc` (the preserved relative path) before falling back to `unresolveImageUrl`, matching the block-level image handling. Also removed the unreliable "find relative portion by common segments" heuristic from `unresolveImageUrl`, simplifying it to direct base-URI prefix stripping. With `originalSrc` now reliably used in both code paths, the fragile heuristic is no longer needed.
 
 ---
 
@@ -96,13 +92,11 @@ These are separate files that must be kept in sync by hand. No build-time valida
 
 ---
 
-### 11. ImageWithCaption / ImageNodeView Bypass Message Protocol
+### ~~11. ImageWithCaption / ImageNodeView Bypass Message Protocol~~ ✅ FIXED
 
-**Files:** `webview-ui/src/editor/extensions/ImageWithCaption.ts` (L43), `webview-ui/src/editor/extensions/ImageNodeView.tsx` (L37)
+**Files:** `webview-ui/src/editor/extensions/ImageWithCaption.ts`, `webview-ui/src/editor/extensions/ImageNodeView.tsx`, `webview-ui/src/editor/extensions/index.ts`, `webview-ui/src/editor/LivemarkEditor.tsx`, `webview-ui/src/App.tsx`
 
-Image deletion directly calls `getVSCodeApi().postMessage(...)` instead of using the centralized `postMessage` from `useVSCodeMessaging`. This bypasses any future middleware, logging, or message validation.
-
-**Risk:** Inconsistent message path; harder to add cross-cutting concerns.
+**Fix:** Added `onDeleteImage` and `onOpenImage` callbacks to the `ImageWithCaption` extension options (same pattern as `ImagePaste.onImagePaste`). These are wired from `App.tsx → LivemarkEditor → createExtensions → ImageWithCaption`. The `ImageNodeView` accesses them via `extension.options`. Removed all direct `getVSCodeApi().postMessage(...)` calls from both files — all messages now flow through the centralized `postMessage` from `useVSCodeMessaging`.
 
 ---
 
@@ -134,13 +128,11 @@ Image deletion directly calls `getVSCodeApi().postMessage(...)` instead of using
 
 ---
 
-### 15. Toolbar Renders as Fragment
+### ~~15. Toolbar Renders as Fragment~~ ✅ FIXED
 
-**File:** `webview-ui/src/components/Toolbar.tsx` (L166)
+**File:** `webview-ui/src/components/Toolbar.tsx`
 
-Returns `<>` fragment instead of a wrapper div. All buttons are direct children of the parent container. Already noted in CLAUDE.md as a known constraint — fragile for future layout changes.
-
-**Risk:** Layout brittleness.
+**Fix:** Replaced the `<>` fragment with a `<div className="livemark-toolbar-group" style={{ display: "contents" }}>` wrapper. `display: contents` means the wrapper doesn't affect flex layout (children behave as if they're direct children of the parent), while providing a real DOM node for React and future layout changes.
 
 ---
 
@@ -159,6 +151,6 @@ Users cannot split-view two Livemark editors on the same file. Enabling this wou
 | Severity | Count | Fixed | Key Themes |
 |----------|-------|-------|------------|
 | Critical | 3 | 2 | Sync race conditions, data loss, undo conflict |
-| High | 4 | 2 | Multi-editor routing, source mode gaps, message drift, image paths |
-| Medium | 5 | 4 | Stale closures, timing hacks, code duplication, error handling |
-| Low | 4 | 1 | Accessibility, CSP, layout, feature limits |
+| High | 4 | 4 | Multi-editor routing, source mode gaps, message drift, image paths |
+| Medium | 5 | 5 | Stale closures, timing hacks, code duplication, error handling |
+| Low | 4 | 2 | Accessibility, CSP, layout, feature limits |

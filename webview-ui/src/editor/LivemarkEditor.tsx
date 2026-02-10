@@ -8,6 +8,8 @@ interface LivemarkEditorProps {
   onReady: (editor: Editor) => void;
   onImagePaste: (base64: string, fileName: string) => void;
   onLinkClick: (href: string) => void;
+  onDeleteImage: (imagePath: string) => void;
+  onOpenImage: (imagePath: string) => void;
   editorRef: React.MutableRefObject<Editor | null>;
 }
 
@@ -16,10 +18,12 @@ export const LivemarkEditor: React.FC<LivemarkEditorProps> = ({
   onReady,
   onImagePaste,
   onLinkClick,
+  onDeleteImage,
+  onOpenImage,
   editorRef,
 }) => {
   const editor = useEditor({
-    extensions: createExtensions({ onImagePaste, onLinkClick }),
+    extensions: createExtensions({ onImagePaste, onLinkClick, onDeleteImage, onOpenImage }),
     content: { type: "doc", content: [{ type: "paragraph" }] },
     onCreate: ({ editor }) => {
       onReady(editor);

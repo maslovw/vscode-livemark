@@ -2,7 +2,7 @@ import React from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
-import { getVSCodeApi } from "../../vscodeApi";
+import type { ImageWithCaptionOptions } from "./ImageWithCaption";
 
 export const ImageNodeView: React.FC<NodeViewProps> = ({
   node,
@@ -11,8 +11,10 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({
   editor,
   getPos,
   deleteNode,
+  extension,
 }) => {
   const { src, alt, title, originalSrc } = node.attrs;
+  const { onDeleteImage, onOpenImage } = extension.options as ImageWithCaptionOptions;
 
   /** Select this image node (NodeSelection) so keyboard shortcuts work. */
   const selectImageNode = () => {
@@ -31,10 +33,7 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({
     deleteNode();
     // Only ask about disk deletion for local files, not URLs
     if (imagePath && !imagePath.startsWith("http://") && !imagePath.startsWith("https://") && !imagePath.startsWith("data:")) {
-      getVSCodeApi().postMessage({
-        type: "webview:deleteImage",
-        imagePath,
-      });
+      onDeleteImage(imagePath);
     }
   };
 
@@ -51,10 +50,7 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({
     e.stopPropagation();
     const imagePath = originalSrc || src;
     if (imagePath) {
-      getVSCodeApi().postMessage({
-        type: "webview:openImage",
-        imagePath,
-      });
+      onOpenImage(imagePath);
     }
   };
 

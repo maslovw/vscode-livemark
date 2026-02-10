@@ -167,7 +167,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
     typeof (editor.commands as any).insertTable === "function";
 
   return (
-    <>
+    <div className="livemark-toolbar-group" style={{ display: "contents" }}>
       {/* Text Style Dropdown */}
       <select
         className="livemark-toolbar-select"
@@ -319,6 +319,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
           onCancel={closeDialog}
         />
       )}
-    </>
+    </div>
   );
 };

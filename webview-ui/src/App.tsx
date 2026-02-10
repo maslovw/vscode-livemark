@@ -135,6 +135,20 @@ export const App: React.FC = () => {
     [postMessage]
   );
 
+  const handleDeleteImage = useCallback(
+    (imagePath: string) => {
+      postMessage({ type: "webview:deleteImage", imagePath });
+    },
+    [postMessage]
+  );
+
+  const handleOpenImage = useCallback(
+    (imagePath: string) => {
+      postMessage({ type: "webview:openImage", imagePath });
+    },
+    [postMessage]
+  );
+
   const handleCommand = useCallback(
     (command: string) => {
       // toggleSourceMode always works, regardless of mode
@@ -338,6 +352,8 @@ export const App: React.FC = () => {
               onReady={handleEditorReady}
               onImagePaste={handleImagePaste}
               onLinkClick={handleLinkClick}
+              onDeleteImage={handleDeleteImage}
+              onOpenImage={handleOpenImage}
               editorRef={editorRef}
             />
             {width === "resizable" && (

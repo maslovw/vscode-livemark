@@ -17,11 +17,13 @@ interface MdastNode {
   spread?: boolean;
 }
 
-/** Strip the webview base URI prefix from an image URL to get the relative path */
+/** Strip the webview base URI prefix from an image URL to get the relative path.
+ *  This is a fallback — images should normally carry an `originalSrc` attribute
+ *  that preserves the original relative path from the markdown source. */
 function unresolveImageUrl(src: string, baseUri?: string): string {
   if (!baseUri || !src) return src;
   
-  // Handle various URL schemes that should be returned as-is
+  // Absolute URLs and data URIs are returned as-is
   if (
     src.startsWith("http://") ||
     src.startsWith("https://") ||
@@ -30,51 +32,30 @@ function unresolveImageUrl(src: string, baseUri?: string): string {
     return src;
   }
   
-  // Try to extract the path portion from vscode-resource or vscode-webview URLs
-  // These URLs have the format: vscode-webview://.../.../path/to/file.png
-  // or vscode-resource.vscode-cdn.net/encoded/path
+  // Try to strip the webview base URI prefix (handles vscode-resource / vscode-webview URLs)
   if (src.includes("vscode-resource") || src.includes("vscode-webview")) {
     try {
       const url = new URL(src);
-      // Get the decoded pathname
-      let pathname = decodeURIComponent(url.pathname);
+      const pathname = decodeURIComponent(url.pathname);
+      const baseUrl = new URL(baseUri);
+      const basePath = decodeURIComponent(baseUrl.pathname);
       
-      // Try to match against baseUri to find common path
-      if (baseUri) {
-        const baseUrl = new URL(baseUri);
-        const basePath = decodeURIComponent(baseUrl.pathname);
-        
-        // If the pathname starts with the base path, remove it
-        if (pathname.startsWith(basePath + "/")) {
-          return pathname.slice(basePath.length + 1);
-        }
-        
-        // Try to find the relative portion by looking for common segments
-        // Example: if pathname is /c:/users/.../workdir/file.md and contains assets/image.png
-        const parts = pathname.split("/");
-        // Look for "assets" or other folder names that might be relative
-        const relativeStart = parts.findIndex((p, i) => 
-          i > 0 && !p.includes(":") && p !== "" && parts[i-1] !== ""
-        );
-        if (relativeStart > 0) {
-          // Build relative path from common folders
-          const remaining = parts.slice(relativeStart).join("/");
-          if (remaining) return remaining;
-        }
+      // If the pathname starts with the base path, return the remainder
+      if (pathname.startsWith(basePath + "/")) {
+        return pathname.slice(basePath.length + 1);
       }
       
-      // Fallback: return the pathname as-is (decoded)
-      // Remove leading slash if it looks like an absolute Windows path
+      // Fallback: strip Windows-style leading slash
       if (pathname.match(/^\/[a-zA-Z]:/)) {
-        pathname = pathname.slice(1);
+        return pathname.slice(1);
       }
       return pathname;
-    } catch (e) {
-      // If URL parsing fails, fall through to simple prefix matching
+    } catch {
+      // Fall through to simple prefix matching
     }
   }
   
-  // Simple prefix matching for other cases
+  // Simple prefix matching
   const prefix = baseUri.replace(/\/$/, "") + "/";
   if (src.startsWith(prefix)) {
     return src.slice(prefix.length);
@@ -317,12 +298,11 @@ function convertInlineContent(
     } else if (node.type === "hardBreak") {
       result.push({ type: "break" });
     } else if (node.type === "image") {
+      const originalSrc = node.attrs?.originalSrc as string | undefined;
+      const src = (node.attrs?.src as string) ?? "";
       result.push({
         type: "image",
-        url: unresolveImageUrl(
-          (node.attrs?.src as string) ?? "",
-          baseUri
-        ),
+        url: originalSrc ?? unresolveImageUrl(src, baseUri),
         alt: (node.attrs?.alt as string) ?? undefined,
         title: (node.attrs?.title as string) ?? undefined,
       });

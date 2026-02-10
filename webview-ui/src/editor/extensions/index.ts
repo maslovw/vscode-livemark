@@ -21,11 +21,15 @@ const lowlight = createLowlight(common);
 interface ExtensionOptions {
   onImagePaste: (base64: string, fileName: string) => void;
   onLinkClick: (href: string) => void;
+  onDeleteImage: (imagePath: string) => void;
+  onOpenImage: (imagePath: string) => void;
 }
 
 export function createExtensions({
   onImagePaste,
   onLinkClick,
+  onDeleteImage,
+  onOpenImage,
 }: ExtensionOptions): Extensions {
   return [
     StarterKit.configure({
@@ -59,6 +63,8 @@ export function createExtensions({
       HTMLAttributes: {
         class: "livemark-image",
       },
+      onDeleteImage,
+      onOpenImage,
     }),
     TaskList,
     TaskItem.configure({

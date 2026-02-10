@@ -2,9 +2,22 @@ import Image from "@tiptap/extension-image";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { ImageNodeView } from "./ImageNodeView";
-import { getVSCodeApi } from "../../vscodeApi";
 
-export const ImageWithCaption = Image.extend({
+export interface ImageWithCaptionOptions {
+  HTMLAttributes: Record<string, unknown>;
+  onDeleteImage: (imagePath: string) => void;
+  onOpenImage: (imagePath: string) => void;
+}
+
+export const ImageWithCaption = Image.extend<ImageWithCaptionOptions>({
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      onDeleteImage: () => {},
+      onOpenImage: () => {},
+    };
+  },
+
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -28,6 +41,8 @@ export const ImageWithCaption = Image.extend({
   },
 
   addKeyboardShortcuts() {
+    const { onDeleteImage } = this.options;
+
     const handleDeleteImage = ({ editor }: { editor: any }) => {
       const { state } = editor.view;
       const { selection } = state;
@@ -42,10 +57,7 @@ export const ImageWithCaption = Image.extend({
         editor.view.dispatch(state.tr.deleteSelection());
         // Ask extension to prompt for disk deletion (only for local files, not URLs)
         if (imagePath && !imagePath.startsWith("http://") && !imagePath.startsWith("https://") && !imagePath.startsWith("data:")) {
-          getVSCodeApi().postMessage({
-            type: "webview:deleteImage",
-            imagePath,
-          });
+          onDeleteImage(imagePath);
         }
         return true;
       }
