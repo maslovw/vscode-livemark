@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-export type ThemeKind = "light" | "dark" | "high-contrast";
+export type ThemeKind = "light" | "dark" | "high-contrast" | "high-contrast-light";
 
 export function useTheme() {
   const applyTheme = useCallback((theme: ThemeKind) => {

@@ -3,7 +3,7 @@
 export interface InitMessage {
   type: "ext:init";
   text: string;
-  theme: "light" | "dark" | "high-contrast";
+  theme: "light" | "dark" | "high-contrast" | "high-contrast-light";
   baseUri: string;
   version: string;
   alignment: string;
@@ -18,7 +18,7 @@ export interface DocumentChangedMessage {
 
 export interface ThemeChangedMessage {
   type: "ext:themeChanged";
-  theme: "light" | "dark" | "high-contrast";
+  theme: "light" | "dark" | "high-contrast" | "high-contrast-light";
 }
 
 export interface ImageSavedMessage {

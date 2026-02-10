@@ -18,10 +18,14 @@ export async function deleteImageFromDisk(
   }
 }
 
-export function generateImagePath(
+/**
+ * Compute the absolute save path and a document-relative path for a new image.
+ * Shared by `generateImagePath` (preview only) and `saveImage` (actual write).
+ */
+function computeImagePaths(
   documentUri: vscode.Uri,
   originalFileName: string
-): string {
+): { absolutePath: string; relativePath: string } {
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(documentUri);
   const baseDir = workspaceFolder
     ? workspaceFolder.uri.fsPath
@@ -44,11 +48,18 @@ export function generateImagePath(
     .replace("{mdfilename}", docName);
 
   const fileName = baseName + ext;
-  const filePath = path.join(saveDirPath, fileName);
-
-  // Return path relative to document
+  const absolutePath = path.join(saveDirPath, fileName);
   const docDir = path.dirname(documentUri.fsPath);
-  return path.relative(docDir, filePath).replace(/\\/g, "/");
+  const relativePath = path.relative(docDir, absolutePath).replace(/\\/g, "/");
+
+  return { absolutePath, relativePath };
+}
+
+export function generateImagePath(
+  documentUri: vscode.Uri,
+  originalFileName: string
+): string {
+  return computeImagePaths(documentUri, originalFileName).relativePath;
 }
 
 export async function saveImage(
@@ -56,43 +67,21 @@ export async function saveImage(
   base64Data: string,
   originalFileName: string
 ): Promise<string> {
-  const workspaceFolder = vscode.workspace.getWorkspaceFolder(documentUri);
-  const baseDir = workspaceFolder
-    ? workspaceFolder.uri.fsPath
-    : path.dirname(documentUri.fsPath);
-
-  const saveFolder = getImageSaveFolder();
-  const mdFileDir = path.relative(baseDir, path.dirname(documentUri.fsPath));
-  const resolvedFolder = saveFolder.replace("{mdfilepath}", mdFileDir);
-  const saveDirPath = path.join(baseDir, resolvedFolder);
+  const { absolutePath, relativePath } = computeImagePaths(documentUri, originalFileName);
 
   // Ensure directory exists
-  await vscode.workspace.fs.createDirectory(vscode.Uri.file(saveDirPath));
-
-  // Generate file name
-  const ext = path.extname(originalFileName) || ".png";
-  const namePattern = getImageNamePattern();
-  const timestamp = Date.now().toString();
-  const docName = path.basename(documentUri.fsPath, path.extname(documentUri.fsPath));
-  const baseName = namePattern
-    .replace("{timestamp}", timestamp)
-    .replace("{original}", path.basename(originalFileName, ext))
-    .replace("{hash}", timestamp.slice(-8))
-    .replace("{mdfilename}", docName);
-
-  const fileName = baseName + ext;
-  const filePath = path.join(saveDirPath, fileName);
+  await vscode.workspace.fs.createDirectory(
+    vscode.Uri.file(path.dirname(absolutePath))
+  );
 
   // Decode base64 and write
   const buffer = Buffer.from(base64Data, "base64");
   await vscode.workspace.fs.writeFile(
-    vscode.Uri.file(filePath),
+    vscode.Uri.file(absolutePath),
     new Uint8Array(buffer)
   );
 
-  // Return path relative to document
-  const docDir = path.dirname(documentUri.fsPath);
-  return path.relative(docDir, filePath).replace(/\\/g, "/");
+  return relativePath;
 }
 
 export async function saveImageWithPath(

@@ -34,24 +34,19 @@ TipTap maintains its own undo history; `vscode.workspace.applyEdit` pushes to VS
 
 ## High
 
-### 4. `setActiveWebview` Is a Global Singleton
+### ~~4. `setActiveWebview` Is a Global Singleton~~ ✅ FIXED
 
-**Files:** `src/commands.ts`, `src/LivemarkEditorProvider.ts` (L64, L237)
+**Files:** `src/commands.ts`, `src/LivemarkEditorProvider.ts`
 
-A single `activePostMessage` function pointer stores the "current" webview. `resolveCustomTextEditor` calls `setActiveWebview(postMessage)` immediately on open, meaning the **last opened** editor always captures commands — not the currently focused one. The `onDidChangeViewState` handler corrects this on focus, but there's a window between open and first focus where commands route to the wrong panel.
-
-**Risk:** Formatting commands (bold, italic, headings) applied to the wrong editor when multiple Livemark tabs are open.
+**Fix:** Removed the `setActiveWebview(postMessage)` call at editor open time. Now the active webview is only set via `onDidChangeViewState` (on focus), with an additional check at creation time if the panel is already active. This eliminates the window where commands could route to the wrong panel.
 
 ---
 
-### 5. Source Mode Drops Commands and Has Timing Edge Case
+### ~~5. Source Mode Drops Commands and Has Timing Edge Case~~ ✅ FIXED
 
-**Files:** `webview-ui/src/App.tsx` (L64, L217–L222)
+**Files:** `webview-ui/src/App.tsx`
 
-- `ext:executeCommand` arriving in source mode calls `handleCommand` on `editorRef.current`, which is `null` (TipTap is unmounted). Commands are silently dropped.
-- When switching back to rendered mode: `toggleSourceMode` calls `loadContent(editor, sourceText)`, but if `editorRef.current` is momentarily `null` (stale ref from unmounted editor), it falls through to `pendingContent`. The timing between `setIsSourceMode(false)` and React re-rendering `<LivemarkEditor>` is not guaranteed.
-
-**Risk:** Lost commands; potential blank editor after source→rendered switch.
+**Fix:** Added `isSourceModeRef` to track source mode without stale closures. `handleCommand` now handles `toggleSourceMode` before checking for the editor, so it works in both modes. Other formatting commands are intentionally skipped in source mode (they have no meaning in a textarea). This also fixes issue #8 (stale closure).
 
 ---
 
@@ -77,33 +72,27 @@ These are separate files that must be kept in sync by hand. No build-time valida
 
 ## Medium
 
-### 8. Stale Closure in App.tsx Message Handler
+### ~~8. Stale Closure in App.tsx Message Handler~~ ✅ FIXED
 
-**File:** `webview-ui/src/App.tsx` (L37, L149)
+**File:** `webview-ui/src/App.tsx`
 
-The `useCallback` message handler depends on `[isSourceMode]`, but `handleCommand` has an empty `[]` dependency array. While refs protect against stale editor references, `isSourceMode` could be stale between React re-renders if a message arrives mid-transition.
-
-**Risk:** Incorrect message routing during rapid mode switches.
+**Fix:** Added `isSourceModeRef` ref that stays in sync with state. `handleCommand` now reads from refs instead of relying on closure state, eliminating stale closure issues during rapid mode switches. Fixed together with issue #5.
 
 ---
 
-### 9. Config Change Suppression Uses `setTimeout`
+### ~~9. Config Change Suppression Uses `setTimeout`~~ ✅ FIXED
 
-**File:** `src/LivemarkEditorProvider.ts` (L200)
+**File:** `src/LivemarkEditorProvider.ts`
 
-When the webview sends `webview:setLayout`, the extension suppresses the resulting config change echo with `setTimeout(() => { suppressLayoutChange = false; }, 200)`. Timing-based suppression is unreliable — if `onDidChangeConfiguration` fires after 200ms (system load, slow disk), the layout change bounces back.
-
-**Risk:** Layout flickering under load.
+**Fix:** Replaced the timing-based `setTimeout` boolean flag with a counter (`pendingLayoutChanges`). The counter is incremented once per config key being written, and decremented in the `onDidChangeConfiguration` handler. This deterministically suppresses exactly the right number of echoed config change events regardless of system timing.
 
 ---
 
-### 10. `ImageHandler.ts` — Duplicated Path Generation Logic
+### ~~10. `ImageHandler.ts` — Duplicated Path Generation Logic~~ ✅ FIXED
 
-**File:** `src/ImageHandler.ts` (L26–L48 vs L63–L85)
+**File:** `src/ImageHandler.ts`
 
-`generateImagePath` and `saveImage` contain **identical** path computation code: workspace folder resolution, `{mdfilepath}` replacement, name pattern substitution, timestamp generation. Any fix must be applied in two places.
-
-**Risk:** Path generation bugs from inconsistent edits.
+**Fix:** Extracted a shared `computeImagePaths()` helper that returns both the absolute path and the document-relative path. Both `generateImagePath` and `saveImage` now delegate to this single function, eliminating the duplicated workspace resolution, folder expansion, and name pattern logic.
 
 ---
 
@@ -117,25 +106,21 @@ Image deletion directly calls `getVSCodeApi().postMessage(...)` instead of using
 
 ---
 
-### 12. No Error Boundary in Webview React App
+### ~~12. No Error Boundary in Webview React App~~ ✅ FIXED
 
-**File:** `webview-ui/src/main.tsx`
+**File:** `webview-ui/src/main.tsx`, `webview-ui/src/components/ErrorBoundary.tsx`
 
-`<App />` renders with no React error boundary. A serialization crash (malformed markdown → MDAST conversion failure) unmounts the entire editor — white screen, no recovery, no error message.
-
-**Risk:** Unrecoverable editor crash on malformed input.
+**Fix:** Added a React `ErrorBoundary` component that catches render errors and displays a styled error screen with the error message, stack trace, and a "Try Again" button. Wraps `<App />` in `main.tsx` so serialization crashes no longer white-screen the editor.
 
 ---
 
 ## Low
 
-### 13. `HighContrastLight` Theme Mapped to "light"
+### ~~13. `HighContrastLight` Theme Mapped to "light"~~ ✅ FIXED
 
-**File:** `src/ThemeSync.ts` (L8)
+**File:** `src/ThemeSync.ts`, `src/messages.ts`, `webview-ui/src/messages.ts`, `webview-ui/src/hooks/useTheme.ts`
 
-`HighContrastLight` maps to `"light"` instead of a dedicated mode. Users relying on high-contrast light themes get insufficient contrast.
-
-**Risk:** Accessibility gap for high-contrast light users.
+**Fix:** Added `"high-contrast-light"` to the `ThemeKind` union across all files. `HighContrastLight` now maps to its own dedicated mode instead of falling through to `"light"`. The `data-theme` attribute on the webview root is set to `"high-contrast-light"` for these themes, enabling targeted CSS overrides.
 
 ---
 
@@ -171,9 +156,9 @@ Users cannot split-view two Livemark editors on the same file. Enabling this wou
 
 ## Summary
 
-| Severity | Count | Key Themes |
-|----------|-------|------------|
-| Critical | 3 (2 fixed) | Sync race conditions, data loss, undo conflict |
-| High | 4 | Multi-editor routing, source mode gaps, message drift, image paths |
-| Medium | 5 | Stale closures, timing hacks, code duplication, error handling |
-| Low | 4 | Accessibility, CSP, layout, feature limits |
+| Severity | Count | Fixed | Key Themes |
+|----------|-------|-------|------------|
+| Critical | 3 | 2 | Sync race conditions, data loss, undo conflict |
+| High | 4 | 2 | Multi-editor routing, source mode gaps, message drift, image paths |
+| Medium | 5 | 4 | Stale closures, timing hacks, code duplication, error handling |
+| Low | 4 | 1 | Accessibility, CSP, layout, feature limits |

@@ -18,6 +18,7 @@ export const App: React.FC = () => {
   const [isReady, setIsReady] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [isSourceMode, setIsSourceMode] = useState(false);
+  const isSourceModeRef = useRef(false);
   const [sourceText, setSourceText] = useState("");
   const [baseUri, setBaseUri] = useState<string | undefined>(undefined);
   const [version, setVersion] = useState<string>("");
@@ -136,6 +137,15 @@ export const App: React.FC = () => {
 
   const handleCommand = useCallback(
     (command: string) => {
+      // toggleSourceMode always works, regardless of mode
+      if (command === "toggleSourceMode") {
+        toggleSourceModeRef.current();
+        return;
+      }
+
+      // All other commands require the TipTap editor (rendered mode)
+      if (isSourceModeRef.current) return;
+
       const editor = editorRef.current;
       if (!editor) return;
 
@@ -205,11 +215,11 @@ export const App: React.FC = () => {
           break;
         }
         case "toggleSourceMode":
-          toggleSourceModeRef.current();
+          // Handled above, before the editor check
           break;
       }
     },
-    []
+    [] // Refs avoid stale closures
   );
 
   const toggleSourceMode = useCallback(() => {
@@ -237,6 +247,11 @@ export const App: React.FC = () => {
   useEffect(() => {
     toggleSourceModeRef.current = toggleSourceMode;
   }, [toggleSourceMode]);
+
+  // Keep source mode ref in sync
+  useEffect(() => {
+    isSourceModeRef.current = isSourceMode;
+  }, [isSourceMode]);
 
   const handleSourceChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

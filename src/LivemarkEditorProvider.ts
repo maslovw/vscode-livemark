@@ -49,15 +49,16 @@ export class LivemarkEditorProvider
 
     // Track if we should suppress external change events (stays true for the full applyEdit lifecycle)
     let suppressExternalChanges = false;
-    let suppressLayoutChange = false;
+    // Counter-based suppression: incremented before config writes, decremented in the config change handler
+    let pendingLayoutChanges = 0;
 
     // Post typed message helper
     const postMessage = (message: ExtensionMessage): boolean => {
       return webview.postMessage(message) as unknown as boolean;
     };
 
-    // Set active webview for commands
-    setActiveWebview(postMessage);
+    // Active webview is set by onDidChangeViewState below (not here at open time,
+    // to avoid routing commands to the wrong panel when multiple tabs are open).
 
     // Handle messages from webview
     const messageDisposable = webview.onDidReceiveMessage(
@@ -204,8 +205,14 @@ export class LivemarkEditorProvider
             break;
           }
           case "webview:setLayout": {
-            suppressLayoutChange = true;
             const config = vscode.workspace.getConfiguration("livemark");
+            // Count how many config updates we're about to make so we can
+            // suppress exactly that many echoed onDidChangeConfiguration events
+            let updates = 0;
+            if (message.alignment) updates++;
+            if (message.width) updates++;
+            if (message.contentWidth !== undefined) updates++;
+            pendingLayoutChanges += updates;
             if (message.alignment) {
               await config.update("alignment", message.alignment, vscode.ConfigurationTarget.Global);
             }
@@ -215,7 +222,6 @@ export class LivemarkEditorProvider
             if (message.contentWidth !== undefined) {
               await config.update("contentWidth", message.contentWidth, vscode.ConfigurationTarget.Global);
             }
-            setTimeout(() => { suppressLayoutChange = false; }, 200);
             break;
           }
         }
@@ -253,7 +259,10 @@ export class LivemarkEditorProvider
         e.affectsConfiguration("livemark.width") ||
         e.affectsConfiguration("livemark.contentWidth")
       ) {
-        if (suppressLayoutChange) return;
+        if (pendingLayoutChanges > 0) {
+          pendingLayoutChanges--;
+          return;
+        }
         postMessage({
           type: "ext:layoutChanged",
           alignment: getAlignment(),
@@ -264,6 +273,10 @@ export class LivemarkEditorProvider
     });
 
     // Track active panel for commands
+    // Set immediately if the panel is already active (e.g. first open)
+    if (webviewPanel.active) {
+      setActiveWebview(postMessage);
+    }
     const visibilityDisposable = webviewPanel.onDidChangeViewState(() => {
       if (webviewPanel.active) {
         setActiveWebview(postMessage);
