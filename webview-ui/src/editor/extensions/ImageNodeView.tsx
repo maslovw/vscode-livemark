@@ -1,7 +1,8 @@
 import React from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
-import { TextSelection } from "@tiptap/pm/state";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
+import { getVSCodeApi } from "../../vscodeApi";
 
 export const ImageNodeView: React.FC<NodeViewProps> = ({
   node,
@@ -9,8 +10,52 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({
   selected,
   editor,
   getPos,
+  deleteNode,
 }) => {
   const { src, alt, title, originalSrc } = node.attrs;
+
+  /** Select this image node (NodeSelection) so keyboard shortcuts work. */
+  const selectImageNode = () => {
+    const pos = getPos();
+    if (typeof pos === "number") {
+      const { tr } = editor.view.state;
+      tr.setSelection(NodeSelection.create(editor.view.state.doc, pos));
+      editor.view.dispatch(tr);
+      editor.view.focus();
+    }
+  };
+
+  /** Delete the image node and ask the extension whether to delete from disk. */
+  const deleteImageNode = () => {
+    const imagePath = originalSrc || src;
+    deleteNode();
+    if (imagePath) {
+      getVSCodeApi().postMessage({
+        type: "webview:deleteImage",
+        imagePath,
+      });
+    }
+  };
+
+  const handleFigureClick = (e: React.MouseEvent<HTMLElement>) => {
+    // If the click landed on the figcaption, let it handle focus itself.
+    const target = e.target as HTMLElement;
+    if (target.closest(".livemark-image-caption")) return;
+    e.preventDefault();
+    selectImageNode();
+  };
+
+  const handleImageDoubleClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const imagePath = originalSrc || src;
+    if (imagePath) {
+      getVSCodeApi().postMessage({
+        type: "webview:openImage",
+        imagePath,
+      });
+    }
+  };
 
   const handleCaptionKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === "Enter") {
@@ -33,18 +78,28 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({
         editor.view.focus();
       }
     }
+
+    // Backspace / Delete on an empty caption → delete the image node
+    if (e.key === "Backspace" || e.key === "Delete") {
+      const captionText = e.currentTarget.textContent || "";
+      if (captionText === "") {
+        e.preventDefault();
+        deleteImageNode();
+      }
+    }
   };
 
   return (
     <NodeViewWrapper
       className={`livemark-image-wrapper${selected ? " selected" : ""}`}
     >
-      <figure>
+      <figure onClick={handleFigureClick}>
         <img
           src={src}
           alt={alt || ""}
           title={title || undefined}
           className="livemark-image"
+          onDoubleClick={handleImageDoubleClick}
         />
         <figcaption
           className="livemark-image-caption"

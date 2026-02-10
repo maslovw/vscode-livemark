@@ -2,6 +2,22 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getImageSaveFolder, getImageNamePattern } from "./config";
 
+export async function deleteImageFromDisk(
+  documentUri: vscode.Uri,
+  imagePath: string
+): Promise<void> {
+  const docDir = path.dirname(documentUri.fsPath);
+  const absolutePath = path.resolve(docDir, imagePath);
+  const fileUri = vscode.Uri.file(absolutePath);
+
+  try {
+    await vscode.workspace.fs.stat(fileUri);
+    await vscode.workspace.fs.delete(fileUri);
+  } catch {
+    throw new Error(`Image file not found: ${imagePath}`);
+  }
+}
+
 export async function saveImage(
   documentUri: vscode.Uri,
   base64Data: string,

@@ -55,8 +55,20 @@ export interface OpenLinkMessage {
   href: string;
 }
 
+export interface DeleteImageMessage {
+  type: "webview:deleteImage";
+  imagePath: string;
+}
+
+export interface OpenImageMessage {
+  type: "webview:openImage";
+  imagePath: string;
+}
+
 export type WebviewMessage =
   | WebviewReadyMessage
   | ContentChangedMessage
   | PasteImageMessage
-  | OpenLinkMessage;
+  | OpenLinkMessage
+  | DeleteImageMessage
+  | OpenImageMessage;

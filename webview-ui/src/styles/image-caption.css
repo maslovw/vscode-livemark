@@ -8,12 +8,16 @@
   margin: 0;
   display: inline-block;
   max-width: 100%;
+  cursor: default;
 }
 
 .livemark-image-wrapper img {
   max-width: 100%;
   height: auto;
   display: block;
+  min-height: 40px;
+  min-width: 80px;
+  cursor: pointer;
 }
 
 .livemark-image-caption {

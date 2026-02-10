@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getNonce } from "./util";
 import { getCurrentTheme, onThemeChange } from "./ThemeSync";
-import { saveImage } from "./ImageHandler";
+import { saveImage, deleteImageFromDisk } from "./ImageHandler";
 import { setActiveWebview } from "./commands";
 import type { ExtensionMessage, WebviewMessage } from "./messages";
 
@@ -104,7 +104,42 @@ export class LivemarkEditorProvider
             }
             break;
           }
-          case "webview:openLink": {
+          case "webview:deleteImage": {
+            const answer = await vscode.window.showInformationMessage(
+              `Delete image file "${message.imagePath}" from disk?`,
+              { modal: true },
+              "Delete from Disk"
+            );
+            if (answer === "Delete from Disk") {
+              try {
+                await deleteImageFromDisk(
+                  document.uri,
+                  message.imagePath
+                );
+              } catch (err) {
+                vscode.window.showWarningMessage(
+                  `Could not delete image: ${err}`
+                );
+              }
+            }
+            break;
+          }          case "webview:openImage": {
+            const docDir = path.dirname(document.uri.fsPath);
+            const imagePath = path.resolve(docDir, message.imagePath);
+            const imageUri = vscode.Uri.file(imagePath);
+            try {
+              await vscode.commands.executeCommand(
+                "vscode.open",
+                imageUri,
+                { preview: false }
+              );
+            } catch (err) {
+              vscode.window.showWarningMessage(
+                `Could not open image: ${message.imagePath}`
+              );
+            }
+            break;
+          }          case "webview:openLink": {
             const href = message.href;
             if (
               href.startsWith("http://") ||
