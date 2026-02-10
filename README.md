@@ -38,6 +38,11 @@ Livemark is not yet published to the VS Code Marketplace. To run it from source:
    npm run build
    ```
 
+Build and install to vscode
+
+   npx @vscode/vsce package --no-dependencies
+   code --install-extension livemark-<version>.vsix --force
+
    This runs the webview Vite build first, then the extension esbuild bundle.
 
 4. **Launch the extension** -- open the `livemark` folder in VS Code, then press **F5** to start the Extension Development Host.

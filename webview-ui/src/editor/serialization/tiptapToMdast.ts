@@ -45,7 +45,15 @@ function convertNodes(
   for (const node of nodes) {
     const converted = convertNode(node, baseUri);
     if (converted) {
-      result.push(converted);
+      // Image is phrasing (inline) content in MDAST and must be wrapped
+      // in a paragraph when used at the flow (block) level.  Without this
+      // wrapper remark-stringify produces invalid output (all newlines
+      // between blocks are dropped).
+      if (converted.type === "image") {
+        result.push({ type: "paragraph", children: [converted] });
+      } else {
+        result.push(converted);
+      }
     }
   }
   return result;

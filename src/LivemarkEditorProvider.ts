@@ -65,11 +65,13 @@ export class LivemarkEditorProvider
             const docDirUri = vscode.Uri.file(
               path.dirname(document.uri.fsPath)
             );
+            const extVersion = this.context.extension.packageJSON.version ?? "";
             postMessage({
               type: "ext:init",
               text: document.getText(),
               theme: getCurrentTheme(),
               baseUri: webview.asWebviewUri(docDirUri).toString(),
+              version: extVersion,
             });
             break;
           }

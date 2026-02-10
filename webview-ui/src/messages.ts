@@ -5,6 +5,7 @@ export interface InitMessage {
   text: string;
   theme: "light" | "dark" | "high-contrast";
   baseUri: string;
+  version: string;
 }
 
 export interface DocumentChangedMessage {

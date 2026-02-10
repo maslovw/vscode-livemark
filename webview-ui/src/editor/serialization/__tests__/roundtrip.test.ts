@@ -142,6 +142,24 @@ describe("roundtrip: parse -> serialize -> parse -> serialize stability", () => 
       "- item text\n\n  ![caption](https://example.com/photo.png)"
     );
   });
+
+  it("block-level image with preceding heading and paragraph", () => {
+    assertStableRoundtrip(
+      "# Heading\n\nSome text\n\n![](image.png)"
+    );
+  });
+
+  it("headings with links and block-level image (IsoCanTp pattern)", () => {
+    assertStableRoundtrip(
+      "# Title\n\n## Section\n\n[link](https://example.com)\n\n## Another\n\nParagraph text.\n\n![](assets/photo.png)"
+    );
+  });
+
+  it("multiple block-level images", () => {
+    assertStableRoundtrip(
+      "![](a.png)\n\n![](b.png)"
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------

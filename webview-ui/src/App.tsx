@@ -17,6 +17,7 @@ export const App: React.FC = () => {
   const [isSourceMode, setIsSourceMode] = useState(false);
   const [sourceText, setSourceText] = useState("");
   const [baseUri, setBaseUri] = useState<string | undefined>(undefined);
+  const [version, setVersion] = useState<string>("");
   const baseUriRef = useRef<string | undefined>(undefined);
   const { applyTheme } = useTheme();
 
@@ -31,6 +32,7 @@ export const App: React.FC = () => {
             applyTheme(message.theme);
             setBaseUri(message.baseUri);
             baseUriRef.current = message.baseUri;
+            setVersion(message.version ?? "");
             setSourceText(message.text);
             if (editorRef.current) {
               loadContent(editorRef.current, message.text);
@@ -228,6 +230,7 @@ export const App: React.FC = () => {
     <div className="livemark-container">
       <div className="livemark-toolbar">
         {!isSourceMode && <Toolbar editor={editorRef.current} />}
+        {version && <span className="livemark-version">v{version}</span>}
         <ModeToggle isSourceMode={isSourceMode} onToggle={toggleSourceMode} />
       </div>
       <div className="livemark-editor-area">

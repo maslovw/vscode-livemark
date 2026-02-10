@@ -51,9 +51,19 @@
   margin: 0 4px;
 }
 
+/* Version label */
+.livemark-version {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--livemark-toolbar-fg);
+  opacity: 0.5;
+  user-select: none;
+  white-space: nowrap;
+}
+
 /* Mode toggle */
 .livemark-mode-toggle {
-  margin-left: auto;
+  margin-left: 8px;
   padding: 4px 10px;
   border: 1px solid var(--livemark-toolbar-border);
   border-radius: 4px;
