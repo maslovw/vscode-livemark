@@ -11,3 +11,9 @@ export function getImageNamePattern(): string {
     .getConfiguration("livemark")
     .get<string>("imageNamePattern", "image-{timestamp}");
 }
+
+export function getConfirmImagePath(): boolean {
+  return vscode.workspace
+    .getConfiguration("livemark")
+    .get<boolean>("confirmImagePath", false);
+}

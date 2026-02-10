@@ -2,9 +2,10 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { getNonce } from "./util";
 import { getCurrentTheme, onThemeChange } from "./ThemeSync";
-import { saveImage, deleteImageFromDisk } from "./ImageHandler";
+import { saveImage, deleteImageFromDisk, generateImagePath, saveImageWithPath } from "./ImageHandler";
 import { setActiveWebview } from "./commands";
 import type { ExtensionMessage, WebviewMessage } from "./messages";
+import { getConfirmImagePath } from "./config";
 
 export class LivemarkEditorProvider
   implements vscode.CustomTextEditorProvider
@@ -88,11 +89,44 @@ export class LivemarkEditorProvider
           }
           case "webview:pasteImage": {
             try {
-              const relativePath = await saveImage(
-                document.uri,
-                message.base64,
-                message.fileName
-              );
+              let relativePath: string;
+              
+              if (getConfirmImagePath()) {
+                // Generate proposed path and show input dialog
+                const proposedPath = generateImagePath(
+                  document.uri,
+                  message.fileName
+                );
+                const userPath = await vscode.window.showInputBox({
+                  prompt: "Enter path and filename for the pasted image",
+                  value: proposedPath,
+                  validateInput: (value) => {
+                    if (!value || value.trim() === "") {
+                      return "Path cannot be empty";
+                    }
+                    return null;
+                  },
+                });
+                
+                if (!userPath) {
+                  // User cancelled
+                  break;
+                }
+                
+                relativePath = await saveImageWithPath(
+                  document.uri,
+                  message.base64,
+                  userPath
+                );
+              } else {
+                // Save directly with default path
+                relativePath = await saveImage(
+                  document.uri,
+                  message.base64,
+                  message.fileName
+                );
+              }
+              
               postMessage({
                 type: "ext:imageSaved",
                 relativePath,

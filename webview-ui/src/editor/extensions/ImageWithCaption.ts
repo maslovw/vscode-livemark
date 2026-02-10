@@ -40,8 +40,8 @@ export const ImageWithCaption = Image.extend({
           selection.node.attrs.originalSrc || selection.node.attrs.src;
         // Remove the node from the document
         editor.view.dispatch(state.tr.deleteSelection());
-        // Ask extension to prompt for disk deletion
-        if (imagePath) {
+        // Ask extension to prompt for disk deletion (only for local files, not URLs)
+        if (imagePath && !imagePath.startsWith("http://") && !imagePath.startsWith("https://") && !imagePath.startsWith("data:")) {
           getVSCodeApi().postMessage({
             type: "webview:deleteImage",
             imagePath,

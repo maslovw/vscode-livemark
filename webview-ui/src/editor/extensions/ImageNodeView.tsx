@@ -29,7 +29,8 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({
   const deleteImageNode = () => {
     const imagePath = originalSrc || src;
     deleteNode();
-    if (imagePath) {
+    // Only ask about disk deletion for local files, not URLs
+    if (imagePath && !imagePath.startsWith("http://") && !imagePath.startsWith("https://") && !imagePath.startsWith("data:")) {
       getVSCodeApi().postMessage({
         type: "webview:deleteImage",
         imagePath,

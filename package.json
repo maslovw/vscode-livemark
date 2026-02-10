@@ -2,7 +2,7 @@
   "name": "livemark",
   "displayName": "Livemark",
   "description": "WYSIWYG Markdown editor for VS Code",
-  "version": "0.1.25",
+  "version": "0.1.27",
   "publisher": "livemark",
   "engines": {
     "vscode": "^1.80.0"
@@ -187,6 +187,11 @@
           "type": "string",
           "default": "image-{timestamp}",
           "description": "Naming pattern for saved images. Supports {timestamp}, {hash}, {original}, {mdfilename}"
+        },
+        "livemark.confirmImagePath": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, shows a dialog to confirm/edit the image path and filename before saving pasted images."
         }
       }
     }
