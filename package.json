@@ -2,7 +2,7 @@
   "name": "livemark",
   "displayName": "Livemark",
   "description": "WYSIWYG Markdown editor for VS Code",
-  "version": "0.1.42",
+  "version": "0.1.44",
   "publisher": "livemark",
   "engines": {
     "vscode": "^1.80.0"
@@ -242,7 +242,7 @@
     "watch:extension": "node esbuild.mjs --watch",
     "dev:webview": "cd webview-ui && npm run dev",
     "test:integration": "npm run build:tests && node dist/test/runTest.js",
-    "package": "vsce package"
+    "package": "npx @vscode/vsce package"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
