@@ -60,11 +60,15 @@ export const App: React.FC = () => {
               editorRef.current
                 .chain()
                 .focus()
-                .setImage({
-                  src: resolveImageUrl(
-                    message.relativePath,
-                    baseUriRef.current
-                  ),
+                .insertContent({
+                  type: "image",
+                  attrs: {
+                    src: resolveImageUrl(
+                      message.relativePath,
+                      baseUriRef.current
+                    ),
+                    originalSrc: message.relativePath,
+                  },
                 })
                 .run();
             }

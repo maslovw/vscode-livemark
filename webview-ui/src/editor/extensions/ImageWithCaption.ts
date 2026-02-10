@@ -4,6 +4,24 @@ import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { ImageNodeView } from "./ImageNodeView";
 
 export const ImageWithCaption = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      originalSrc: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-original-src"),
+        renderHTML: (attributes) => {
+          if (!attributes.originalSrc) {
+            return {};
+          }
+          return {
+            "data-original-src": attributes.originalSrc,
+          };
+        },
+      },
+    };
+  },
+
   addNodeView() {
     return ReactNodeViewRenderer(ImageNodeView);
   },

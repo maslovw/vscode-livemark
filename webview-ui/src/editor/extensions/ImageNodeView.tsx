@@ -10,7 +10,7 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({
   editor,
   getPos,
 }) => {
-  const { src, alt, title } = node.attrs;
+  const { src, alt, title, originalSrc } = node.attrs;
 
   const handleCaptionKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === "Enter") {

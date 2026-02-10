@@ -17,37 +17,50 @@ Livemark registers with `"priority": "option"`, so it never hijacks your default
 
 ## Installation
 
-Livemark is not yet published to the VS Code Marketplace. To run it from source:
+Livemark is not yet published to the VS Code Marketplace. You can install it from source:
 
-1. **Clone the repository** and open the `livemark` folder.
-
-2. **Install dependencies** for both the extension and the webview:
+1. **Clone the repository:**
 
    ```bash
-   cd livemark
-   npm install
+   git clone <repository-url>
+   cd vscode-livemark
+   ```
 
+2. **Install dependencies:**
+
+   ```bash
+   npm install
    cd webview-ui
    npm install
+   cd ..
    ```
 
-3. **Build everything:**
+3. **Build, package, and install:**
 
    ```bash
-   # From the livemark/ root
+   # Build the extension and webview
    npm run build
+   
+   # Package into .vsix file
+   npm run package -- --allow-missing-repository
+   
+   # Install to VS Code (use --force to update existing installation)
+   code --install-extension livemark-<version>.vsix --force
    ```
 
-Build and install to vscode
+   Check the `version` field in `package.json` to find the current version number.
 
-   npx @vscode/vsce package --no-dependencies
-   code --install-extension livemark-<version>.vsix --force
+4. **Reload VS Code** -- after installation, reload VS Code for the extension to activate.
 
-   This runs the webview Vite build first, then the extension esbuild bundle.
+5. **Use the extension** -- open any `.md` file and choose **Open With... > Livemark** from the editor title bar or the Explorer context menu.
 
-4. **Launch the extension** -- open the `livemark` folder in VS Code, then press **F5** to start the Extension Development Host.
+### Development mode
 
-5. In the Development Host, open any `.md` file and choose **Open With... > Livemark** from the editor title bar or the Explorer context menu.
+For active development, you can run the extension in debug mode:
+
+1. **Open the project folder** in VS Code.
+2. **Press F5** to start the Extension Development Host.
+3. In the Development Host, open any `.md` file and choose **Open With... > Livemark**.
 
 ## Usage
 
@@ -95,6 +108,20 @@ Settings are available under **Settings > Extensions > Livemark** or in `setting
   "livemark.imageNamePattern": "{original}-{timestamp}"
 }
 ```
+
+### Setting Livemark as the default editor
+
+By default, Livemark is available as an option editor (you must use **Open With...** to open Markdown files). To make Livemark the default editor for all `.md` files, add this to your VS Code settings:
+
+```jsonc
+{
+  "workbench.editorAssociations": {
+    "*.md": "livemark.editor"
+  }
+}
+```
+
+You can configure this in **Settings > Workbench > Editor Associations** or by adding it to your `settings.json` file directly. With this setting, all Markdown files will open in Livemark by default. You can still open any file with the standard text editor by right-clicking and choosing **Open With... > Text Editor**.
 
 ## Architecture overview
 
@@ -198,13 +225,24 @@ livemark/
 3. Press **F5** in VS Code to launch the Extension Development Host.
 4. After changing webview code, run `npm run build:webview` and reload the webview (`Cmd+Shift+P` > **Developer: Reload Webviews**).
 
-### Packaging
+### Packaging and updating
+
+To build and install an updated version of the extension:
 
 ```bash
-npm run package
+# Build the code
+npm run build
+
+# Package into .vsix (updates version automatically via bump script)
+npm run package -- --allow-missing-repository
+
+# Install/update in VS Code
+code --install-extension livemark-<version>.vsix --force
 ```
 
-This produces a `.vsix` file using `vsce` that can be installed locally or published to the Marketplace.
+The `--force` flag ensures VS Code replaces any existing installation with the new version. After installation, reload VS Code to activate the changes.
+
+**Note:** The `npm run build` command automatically bumps the patch version in `package.json` before building, so each build gets a new version number.
 
 ## License
 

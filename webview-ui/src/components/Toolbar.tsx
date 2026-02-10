@@ -56,7 +56,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
   const handleInsertImage = () => {
     const url = window.prompt("Enter image URL:");
     if (!url) return;
-    editor.chain().focus().setImage({ src: url }).run();
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "image",
+        attrs: {
+          src: url,
+          originalSrc: url,
+        },
+      })
+      .run();
   };
 
   const handleInsertTable = () => {

@@ -104,10 +104,12 @@ function convertNode(
       for (const child of children) {
         if (child.type === "image") {
           flushInlineBuffer();
+          const originalSrc = child.url ?? "";
           result.push({
             type: "image",
             attrs: {
-              src: resolveImageUrl(child.url ?? "", baseUri),
+              src: resolveImageUrl(originalSrc, baseUri),
+              originalSrc: originalSrc,
               alt: child.alt ?? null,
               title: child.title ?? null,
             },
@@ -170,15 +172,18 @@ function convertNode(
     case "thematicBreak":
       return { type: "horizontalRule" };
 
-    case "image":
+    case "image": {
+      const originalSrc = node.url ?? "";
       return {
         type: "image",
         attrs: {
-          src: resolveImageUrl(node.url ?? "", baseUri),
+          src: resolveImageUrl(originalSrc, baseUri),
+          originalSrc: originalSrc,
           alt: node.alt ?? null,
           title: node.title ?? null,
         },
       };
+    }
 
     case "html":
       return {
