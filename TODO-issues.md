@@ -6,13 +6,11 @@ Identified during architecture review. No fixes applied — tracking only.
 
 ## Critical
 
-### 1. Circular Update Race Condition — Single Boolean Flag
+### ~~1. Circular Update Race Condition — Single Boolean Flag~~ ✅ FIXED
 
-**Files:** `src/LivemarkEditorProvider.ts` (L57), `webview-ui/src/hooks/useEditorContent.ts`
+**Files:** `src/LivemarkEditorProvider.ts`, `webview-ui/src/hooks/useEditorContent.ts`
 
-`suppressNextExternalChange` is a single boolean. If `applyEdit` triggers **multiple** `onDidChangeTextDocument` events (large documents, VS Code internals), only the first is suppressed — subsequent events echo content back to the webview, risking an infinite loop. The webview-side `suppressNextUpdate` ref has the same assumption (exactly one `onUpdate` per `setContent`).
-
-**Risk:** Content oscillation / infinite update loop on large documents.
+**Fix:** Extension side: replaced single-shot boolean with a lifecycle-controlled flag (`suppressExternalChanges`) that stays `true` for the entire `applyEdit` await — all `onDidChangeTextDocument` events during the edit are suppressed. Webview side: replaced boolean `suppressNextUpdate` with a numeric counter (`suppressUpdateCount`) that correctly handles multiple `onUpdate` callbacks from a single `setContent`.
 
 ---
 
@@ -177,7 +175,7 @@ Users cannot split-view two Livemark editors on the same file. Enabling this wou
 
 | Severity | Count | Key Themes |
 |----------|-------|------------|
-| Critical | 3 | Sync race conditions, data loss, undo conflict |
+| Critical | 3 (1 fixed) | Sync race conditions, data loss, undo conflict |
 | High | 4 | Multi-editor routing, source mode gaps, message drift, image paths |
 | Medium | 5 | Stale closures, timing hacks, code duplication, error handling |
 | Low | 4 | Accessibility, CSP, layout, feature limits |

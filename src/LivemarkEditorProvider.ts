@@ -47,8 +47,8 @@ export class LivemarkEditorProvider
 
     webview.html = this.getHtmlForWebview(webview);
 
-    // Track if we should suppress the next external change
-    let suppressNextExternalChange = false;
+    // Track if we should suppress external change events (stays true for the full applyEdit lifecycle)
+    let suppressExternalChanges = false;
     let suppressLayoutChange = false;
 
     // Post typed message helper
@@ -81,7 +81,7 @@ export class LivemarkEditorProvider
             break;
           }
           case "webview:contentChanged": {
-            suppressNextExternalChange = true;
+            suppressExternalChanges = true;
             const edit = new vscode.WorkspaceEdit();
             edit.replace(
               document.uri,
@@ -89,6 +89,7 @@ export class LivemarkEditorProvider
               message.text
             );
             await vscode.workspace.applyEdit(edit);
+            suppressExternalChanges = false;
             break;
           }
           case "webview:pasteImage": {
@@ -227,8 +228,7 @@ export class LivemarkEditorProvider
         if (e.document.uri.toString() !== document.uri.toString()) return;
         if (e.contentChanges.length === 0) return;
 
-        if (suppressNextExternalChange) {
-          suppressNextExternalChange = false;
+        if (suppressExternalChanges) {
           return;
         }
 

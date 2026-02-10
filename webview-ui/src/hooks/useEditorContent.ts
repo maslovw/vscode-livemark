@@ -16,7 +16,7 @@ export function useEditorContent({
   baseUri,
 }: UseEditorContentOptions) {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const suppressNextUpdate = useRef(false);
+  const suppressUpdateCount = useRef(0);
   const lastSentText = useRef<string>("");
   const baseUriRef = useRef<string | undefined>(baseUri);
   baseUriRef.current = baseUri;
@@ -24,7 +24,7 @@ export function useEditorContent({
   const loadContent = useCallback(
     (editor: Editor | null, markdown: string) => {
       if (!editor) return;
-      suppressNextUpdate.current = true;
+      suppressUpdateCount.current++;
       lastSentText.current = markdown;
       const doc = parseMarkdown(markdown, baseUriRef.current);
       editor.commands.setContent(doc);
@@ -34,8 +34,8 @@ export function useEditorContent({
 
   const handleUpdate = useCallback(
     (editor: Editor) => {
-      if (suppressNextUpdate.current) {
-        suppressNextUpdate.current = false;
+      if (suppressUpdateCount.current > 0) {
+        suppressUpdateCount.current--;
         return;
       }
 
