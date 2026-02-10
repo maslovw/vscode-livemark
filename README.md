@@ -97,8 +97,8 @@ Settings are available under **Settings > Extensions > Livemark** or in `setting
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `livemark.imageSaveFolder` | `"assets"` | Folder (relative to workspace root) where pasted/dropped images are saved. |
-| `livemark.imageNamePattern` | `"image-{timestamp}"` | Naming pattern for saved images. Supports `{timestamp}`, `{hash}`, and `{original}` placeholders. |
+| `livemark.imageSaveFolder` | `"assets"` | Folder (relative to workspace root) where pasted/dropped images are saved. Supports `{mdfilepath}` to resolve to the markdown file's directory (e.g. `"{mdfilepath}/images"`). |
+| `livemark.imageNamePattern` | `"image-{timestamp}"` | Naming pattern for saved images. Supports `{timestamp}`, `{hash}`, `{original}`, and `{mdfilename}` placeholders. |
 
 **Example:**
 

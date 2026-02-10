@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import type { Editor } from "@tiptap/react";
 
 interface ToolbarProps {
@@ -8,6 +8,17 @@ interface ToolbarProps {
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
+  // Force re-render on editor transactions so active states stay in sync
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    if (!editor) return;
+    const handler = () => forceUpdate((n) => n + 1);
+    editor.on("transaction", handler);
+    return () => {
+      editor.off("transaction", handler);
+    };
+  }, [editor]);
+
   if (!editor) return null;
 
   const btnClass = (active: boolean) =>

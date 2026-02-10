@@ -2,7 +2,7 @@
   "name": "livemark",
   "displayName": "Livemark",
   "description": "WYSIWYG Markdown editor for VS Code",
-  "version": "0.1.8",
+  "version": "0.1.11",
   "publisher": "livemark",
   "engines": {
     "vscode": "^1.80.0"
@@ -181,12 +181,12 @@
         "livemark.imageSaveFolder": {
           "type": "string",
           "default": "assets",
-          "description": "Folder (relative to workspace root) where pasted images are saved"
+          "description": "Folder (relative to workspace root) where pasted images are saved. Supports {mdfilepath} to resolve to the markdown file's directory."
         },
         "livemark.imageNamePattern": {
           "type": "string",
           "default": "image-{timestamp}",
-          "description": "Naming pattern for saved images. Supports {timestamp}, {hash}, {original}"
+          "description": "Naming pattern for saved images. Supports {timestamp}, {hash}, {original}, {mdfilename}"
         }
       }
     }

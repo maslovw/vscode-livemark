@@ -14,6 +14,7 @@ export const App: React.FC = () => {
   const editorRef = useRef<Editor | null>(null);
   const pendingContent = useRef<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [isSourceMode, setIsSourceMode] = useState(false);
   const [sourceText, setSourceText] = useState("");
   const [baseUri, setBaseUri] = useState<string | undefined>(undefined);
@@ -96,6 +97,7 @@ export const App: React.FC = () => {
 
   const handleEditorReady = useCallback(
     (editor: Editor) => {
+      setEditorInstance(editor);
       if (pendingContent.current !== null) {
         loadContent(editor, pendingContent.current);
         pendingContent.current = null;
@@ -238,7 +240,7 @@ export const App: React.FC = () => {
   return (
     <div className="livemark-container">
       <div className="livemark-toolbar">
-        {!isSourceMode && <Toolbar editor={editorRef.current} />}
+        {!isSourceMode && <Toolbar editor={editorInstance} />}
         {version && <span className="livemark-version">v{version}</span>}
         <ModeToggle isSourceMode={isSourceMode} onToggle={toggleSourceMode} />
       </div>

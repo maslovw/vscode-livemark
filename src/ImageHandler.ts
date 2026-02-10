@@ -13,7 +13,9 @@ export async function saveImage(
     : path.dirname(documentUri.fsPath);
 
   const saveFolder = getImageSaveFolder();
-  const saveDirPath = path.join(baseDir, saveFolder);
+  const mdFileDir = path.relative(baseDir, path.dirname(documentUri.fsPath));
+  const resolvedFolder = saveFolder.replace("{mdfilepath}", mdFileDir);
+  const saveDirPath = path.join(baseDir, resolvedFolder);
 
   // Ensure directory exists
   await vscode.workspace.fs.createDirectory(vscode.Uri.file(saveDirPath));
@@ -22,10 +24,12 @@ export async function saveImage(
   const ext = path.extname(originalFileName) || ".png";
   const namePattern = getImageNamePattern();
   const timestamp = Date.now().toString();
+  const docName = path.basename(documentUri.fsPath, path.extname(documentUri.fsPath));
   const baseName = namePattern
     .replace("{timestamp}", timestamp)
     .replace("{original}", path.basename(originalFileName, ext))
-    .replace("{hash}", timestamp.slice(-8));
+    .replace("{hash}", timestamp.slice(-8))
+    .replace("{mdfilename}", docName);
 
   const fileName = baseName + ext;
   const filePath = path.join(saveDirPath, fileName);
