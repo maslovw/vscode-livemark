@@ -193,14 +193,19 @@ export const App: React.FC = () => {
   );
 
   const toggleSourceMode = useCallback(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
-
     if (isSourceMode) {
-      // Switch back to rendered mode - parse source text
-      loadContent(editor, sourceText);
+      // Switch back to rendered mode - the editor will remount and load content via handleEditorReady
+      const editor = editorRef.current;
+      if (editor) {
+        loadContent(editor, sourceText);
+      } else {
+        // Editor was unmounted while in source mode; store content as pending
+        pendingContent.current = sourceText;
+      }
       setIsSourceMode(false);
     } else {
+      const editor = editorRef.current;
+      if (!editor) return;
       // Switch to source mode - serialize current content
       const text = serializeMarkdown(editor.getJSON());
       setSourceText(text);
