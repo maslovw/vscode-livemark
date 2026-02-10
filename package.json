@@ -2,7 +2,7 @@
   "name": "livemark",
   "displayName": "Livemark",
   "description": "WYSIWYG Markdown editor for VS Code",
-  "version": "0.1.11",
+  "version": "0.1.21",
   "publisher": "livemark",
   "engines": {
     "vscode": "^1.80.0"

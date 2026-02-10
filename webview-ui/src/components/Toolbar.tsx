@@ -1,18 +1,53 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { Editor } from "@tiptap/react";
+import { InlineDialog } from "./InlineDialog";
+import type { InlineDialogField } from "./InlineDialog";
 
 interface ToolbarProps {
   editor: Editor | null;
 }
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+type DialogKind = "link" | "editLink" | "image" | null;
+
+/** Build a snapshot string of all formatting states we display in the toolbar. */
+function getActiveStateKey(editor: Editor): string {
+  const parts: string[] = [];
+  for (let level = 1; level <= 6; level++) {
+    if (editor.isActive("heading", { level })) {
+      parts.push(`h${level}`);
+      break;
+    }
+  }
+  for (const mark of [
+    "bold", "italic", "strike", "code",
+    "bulletList", "orderedList", "taskList",
+    "blockquote", "codeBlock", "table", "link",
+  ] as const) {
+    if (editor.isActive(mark)) parts.push(mark);
+  }
+  return parts.join(",");
+}
 
 export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
-  // Force re-render on editor transactions so active states stay in sync
-  const [, forceUpdate] = useState(0);
+  // Only re-render when the set of *active* formatting marks actually changes,
+  // so that opening a <select> dropdown isn't disrupted by unrelated transactions.
+  const [, setStateKey] = useState("");
+  const prevKeyRef = useRef("");
+
+  /* ---- dialog state (must be before any conditional returns) ---- */
+  const [dialog, setDialog] = useState<DialogKind>(null);
+  const [dialogFields, setDialogFields] = useState<InlineDialogField[]>([]);
+
   useEffect(() => {
     if (!editor) return;
-    const handler = () => forceUpdate((n) => n + 1);
+    const handler = () => {
+      const key = getActiveStateKey(editor);
+      if (key !== prevKeyRef.current) {
+        prevKeyRef.current = key;
+        setStateKey(key);
+      }
+    };
     editor.on("transaction", handler);
     return () => {
       editor.off("transaction", handler);
@@ -44,40 +79,78 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
     }
   };
 
+  const closeDialog = () => setDialog(null);
+
   const handleInsertLink = () => {
+    const { from, to } = editor.state.selection;
+    const selectedText =
+      from !== to ? editor.state.doc.textBetween(from, to) : "";
+
+    // If cursor is already inside a link, open edit dialog pre-filled
+    if (editor.isActive("link")) {
+      const attrs = editor.getAttributes("link");
+      setDialogFields([
+        { key: "url", label: "URL", defaultValue: attrs.href ?? "" },
+        { key: "text", label: "Text", defaultValue: selectedText },
+      ]);
+      setDialog("editLink");
+      return;
+    }
+
+    setDialogFields([
+      { key: "url", label: "URL", defaultValue: "" },
+      ...(selectedText
+        ? []
+        : [{ key: "text", label: "Text", defaultValue: "" }]),
+    ]);
+    setDialog("link");
+  };
+
+  const handleLinkSubmit = (values: Record<string, string>) => {
+    const url = values.url?.trim();
+    if (!url) {
+      closeDialog();
+      return;
+    }
     const { from, to } = editor.state.selection;
     const hasSelection = from !== to;
 
-    const url = window.prompt("Enter URL:");
-    if (!url) return;
-
-    if (hasSelection) {
+    if (dialog === "editLink") {
+      // Update existing link
+      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    } else if (hasSelection) {
       editor.chain().focus().setLink({ href: url }).run();
     } else {
-      const text = window.prompt("Enter link text:", url);
-      if (!text) return;
+      const text = values.text?.trim() || url;
       editor
         .chain()
         .focus()
         .insertContent(`<a href="${url}">${text}</a>`)
         .run();
     }
+    closeDialog();
   };
 
   const handleInsertImage = () => {
-    const url = window.prompt("Enter image URL:");
-    if (!url) return;
+    setDialogFields([{ key: "url", label: "Image URL", defaultValue: "" }]);
+    setDialog("image");
+  };
+
+  const handleImageSubmit = (values: Record<string, string>) => {
+    const url = values.url?.trim();
+    if (!url) {
+      closeDialog();
+      return;
+    }
     editor
       .chain()
       .focus()
       .insertContent({
         type: "image",
-        attrs: {
-          src: url,
-          originalSrc: url,
-        },
+        attrs: { src: url, originalSrc: url },
       })
       .run();
+    closeDialog();
   };
 
   const handleInsertTable = () => {
@@ -91,7 +164,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
   };
 
   const canInsertTable =
-    typeof (editor.chain().focus() as any).insertTable === "function";
+    typeof (editor.commands as any).insertTable === "function";
 
   return (
     <>
@@ -226,6 +299,26 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor }) => {
           <circle cx="5" cy="5.5" r="1.5" />
         </svg>
       </button>
+
+      {/* Inline dialogs */}
+      {(dialog === "link" || dialog === "editLink") && (
+        <InlineDialog
+          title={dialog === "editLink" ? "Edit Link" : "Insert Link"}
+          fields={dialogFields}
+          submitLabel={dialog === "editLink" ? "Update" : "Insert"}
+          onSubmit={handleLinkSubmit}
+          onCancel={closeDialog}
+        />
+      )}
+      {dialog === "image" && (
+        <InlineDialog
+          title="Insert Image"
+          fields={dialogFields}
+          submitLabel="Insert"
+          onSubmit={handleImageSubmit}
+          onCancel={closeDialog}
+        />
+      )}
     </>
   );
 };

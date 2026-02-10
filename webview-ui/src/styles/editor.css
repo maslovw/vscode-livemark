@@ -122,3 +122,87 @@
   color: var(--livemark-fg);
   opacity: 0.6;
 }
+
+/* ---- Inline dialog (link / image insertion) ---- */
+
+.livemark-inline-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 60px;
+}
+
+.livemark-inline-dialog {
+  background: var(--livemark-toolbar-bg, #252526);
+  border: 1px solid var(--livemark-toolbar-border, #3c3c3c);
+  border-radius: 6px;
+  padding: 12px 14px;
+  min-width: 300px;
+  max-width: 400px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.livemark-inline-dialog-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--livemark-toolbar-fg, #ccc);
+  margin-bottom: 2px;
+}
+
+.livemark-inline-dialog-input {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--livemark-toolbar-border, #3c3c3c);
+  border-radius: 4px;
+  background: var(--livemark-bg, #1e1e1e);
+  color: var(--livemark-fg, #d4d4d4);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.livemark-inline-dialog-input:focus {
+  border-color: var(--livemark-focus-border, #007acc);
+}
+
+.livemark-inline-dialog-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.livemark-inline-dialog-btn {
+  height: 26px;
+  padding: 0 12px;
+  border: 1px solid var(--livemark-toolbar-border, #3c3c3c);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--livemark-toolbar-fg, #ccc);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.livemark-inline-dialog-btn:hover {
+  background: var(--livemark-btn-hover, #2a2d2e);
+}
+
+.livemark-inline-dialog-btn.primary {
+  background: var(--livemark-focus-border, #007acc);
+  color: #fff;
+  border-color: transparent;
+}
+
+.livemark-inline-dialog-btn.primary:hover {
+  opacity: 0.9;
+}

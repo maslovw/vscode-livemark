@@ -32,6 +32,10 @@ export const LivemarkEditor: React.FC<LivemarkEditorProps> = ({
         class: "livemark-editor-content",
       },
       handleClick: (_view, _pos, event) => {
+        // Only open links on Ctrl+Click (Cmd+Click on Mac)
+        // Normal clicks place the cursor so the user can edit link text
+        if (!(event.ctrlKey || event.metaKey)) return false;
+
         const target = event.target as HTMLElement;
         const link = target.closest("a");
         if (link) {
