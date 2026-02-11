@@ -68,9 +68,23 @@ export function tiptapToMdast(
   doc: JSONContent,
   baseUri?: string
 ): MdastNode {
+  const children = convertNodes(doc.content ?? [], baseUri);
+
+  // Strip a trailing empty paragraph that is added by the TrailingNode
+  // extension purely for editor UX — it should not appear in the markdown.
+  if (children.length > 0) {
+    const last = children[children.length - 1];
+    if (
+      last.type === "paragraph" &&
+      (!last.children || last.children.length === 0)
+    ) {
+      children.pop();
+    }
+  }
+
   return {
     type: "root",
-    children: convertNodes(doc.content ?? [], baseUri),
+    children,
   };
 }
 

@@ -22,7 +22,7 @@ export class LivemarkEditorProvider
       LivemarkEditorProvider.viewType,
       provider,
       {
-        webviewOptions: { retainContextWhenHidden: true },
+        webviewOptions: { retainContextWhenHidden: true, enableFindWidget: true },
         supportsMultipleEditorsPerDocument: false,
       }
     );

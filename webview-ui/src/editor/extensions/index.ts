@@ -14,6 +14,7 @@ import TableCell from "@tiptap/extension-table-cell";
 import { common, createLowlight } from "lowlight";
 import { ImagePaste } from "./ImagePaste";
 import { ListKeymap } from "./ListKeymap";
+import { TrailingNode } from "./TrailingNode";
 import type { Extensions } from "@tiptap/core";
 
 const lowlight = createLowlight(common);
@@ -85,5 +86,6 @@ export function createExtensions({
       onImagePaste,
     }),
     ListKeymap,
+    TrailingNode,
   ];
 }
