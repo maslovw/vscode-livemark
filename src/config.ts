@@ -52,3 +52,9 @@ export function getShowLayoutControls(): boolean {
     .getConfiguration("livemark")
     .get<boolean>("showLayoutControls", true);
 }
+
+export function getPlantumlServer(): string {
+  return vscode.workspace
+    .getConfiguration("livemark")
+    .get<string>("plantumlServer", "https://www.plantuml.com/plantuml");
+}

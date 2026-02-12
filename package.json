@@ -2,7 +2,7 @@
   "name": "livemark",
   "displayName": "Livemark",
   "description": "WYSIWYG Markdown editor for VS Code",
-  "version": "0.1.51",
+  "version": "0.1.56",
   "publisher": "livemark",
   "engines": {
     "vscode": "^1.80.0"
@@ -247,6 +247,11 @@
           "type": "boolean",
           "default": true,
           "description": "Show alignment and width selectors in the toolbar."
+        },
+        "livemark.plantumlServer": {
+          "type": "string",
+          "default": "https://www.plantuml.com/plantuml",
+          "description": "PlantUML server URL used for rendering diagrams. Default uses the public server."
         }
       }
     }

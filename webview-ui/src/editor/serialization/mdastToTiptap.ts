@@ -129,12 +129,30 @@ function convertNode(
         content: convertChildren(node.children ?? [], baseUri),
       };
 
-    case "code":
+    case "code": {
+      const lang = node.lang ?? null;
+      if (lang === "plantuml") {
+        // Determine original format from meta
+        const meta = node.meta ?? "";
+        const originalFormat = meta.includes("originalFormat:startuml")
+          ? "startuml"
+          : "fenced";
+        return {
+          type: "plantumlBlock",
+          attrs: {
+            language: "plantuml",
+            viewMode: "rendered",
+            originalFormat,
+          },
+          content: node.value ? [{ type: "text", text: node.value }] : [],
+        };
+      }
       return {
         type: "codeBlock",
-        attrs: { language: node.lang ?? null },
+        attrs: { language: lang },
         content: node.value ? [{ type: "text", text: node.value }] : [],
       };
+    }
 
     case "list": {
       if (node.ordered) {

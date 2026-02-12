@@ -11,6 +11,7 @@ interface LivemarkEditorProps {
   onDeleteImage: (imagePath: string) => void;
   onOpenImage: (imagePath: string) => void;
   editorRef: React.MutableRefObject<Editor | null>;
+  plantumlServer?: string;
 }
 
 export const LivemarkEditor: React.FC<LivemarkEditorProps> = ({
@@ -21,9 +22,10 @@ export const LivemarkEditor: React.FC<LivemarkEditorProps> = ({
   onDeleteImage,
   onOpenImage,
   editorRef,
+  plantumlServer,
 }) => {
   const editor = useEditor({
-    extensions: createExtensions({ onImagePaste, onLinkClick, onDeleteImage, onOpenImage }),
+    extensions: createExtensions({ onImagePaste, onLinkClick, onDeleteImage, onOpenImage, plantumlServer }),
     content: { type: "doc", content: [{ type: "paragraph" }] },
     onCreate: ({ editor }) => {
       onReady(editor);

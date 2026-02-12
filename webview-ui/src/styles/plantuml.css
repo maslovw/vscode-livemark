@@ -1,0 +1,87 @@
+/* PlantUML block styles */
+
+.livemark-plantuml-wrapper {
+  position: relative;
+  border: 1px solid var(--vscode-editorWidget-border, #ccc);
+  border-radius: 6px;
+  margin: 8px 0;
+  overflow: hidden;
+  background: var(--vscode-editor-background, #fff);
+  transition: border-color 0.15s;
+}
+
+.livemark-plantuml-wrapper.selected {
+  border-color: var(--vscode-focusBorder, #007acc);
+  box-shadow: 0 0 0 1px var(--vscode-focusBorder, #007acc);
+}
+
+.livemark-plantuml-label {
+  font-size: 11px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  color: var(--vscode-descriptionForeground, #888);
+  padding: 2px 8px;
+  background: var(--vscode-editorWidget-background, #f3f3f3);
+  border-bottom: 1px solid var(--vscode-editorWidget-border, #ccc);
+  user-select: none;
+}
+
+/* Source mode textarea */
+.livemark-plantuml-source {
+  display: block;
+  width: 100%;
+  min-height: 100px;
+  padding: 8px 12px;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--vscode-editor-font-size, 13px);
+  line-height: 1.5;
+  color: var(--vscode-editor-foreground, #333);
+  background: var(--vscode-editor-background, #fff);
+  box-sizing: border-box;
+  tab-size: 2;
+}
+
+.livemark-plantuml-source:focus {
+  outline: none;
+}
+
+.livemark-plantuml-source::placeholder {
+  color: var(--vscode-input-placeholderForeground, #aaa);
+}
+
+/* Rendered mode */
+.livemark-plantuml-rendered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: 12px;
+}
+
+.livemark-plantuml-img {
+  max-width: 100%;
+  height: auto;
+}
+
+.livemark-plantuml-loading {
+  color: var(--vscode-descriptionForeground, #888);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.livemark-plantuml-error {
+  color: var(--vscode-errorForeground, #f44);
+  font-size: 13px;
+  padding: 8px;
+  text-align: center;
+}
+
+.livemark-plantuml-empty {
+  color: var(--vscode-descriptionForeground, #888);
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+}

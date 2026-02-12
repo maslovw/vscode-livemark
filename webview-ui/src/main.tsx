@@ -9,6 +9,7 @@ import "./styles/syntax-highlight.css";
 import "./styles/table.css";
 import "./styles/image-caption.css";
 import "./styles/toolbar.css";
+import "./styles/plantuml.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

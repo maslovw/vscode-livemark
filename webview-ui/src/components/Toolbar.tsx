@@ -26,6 +26,7 @@ function getActiveStateKey(editor: Editor): string {
     "bold", "italic", "strike", "code",
     "bulletList", "orderedList", "taskList",
     "blockquote", "codeBlock", "table", "link",
+    "plantumlBlock",
   ] as const) {
     if (editor.isActive(mark)) parts.push(mark);
   }
@@ -69,7 +70,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor, toolbarContextMode }) 
   const isImageSelected = selection instanceof NodeSelection && selection.node.type.name === "image";
   const isInTable = editor.isActive("table");
   const isInCodeBlock = editor.isActive("codeBlock");
-  const textFormattingDisabled = isImageSelected || isInCodeBlock;
+  const isInPlantUml = editor.isActive("plantumlBlock");
+  const textFormattingDisabled = isImageSelected || isInCodeBlock || isInPlantUml;
 
   const hideMode = toolbarContextMode === "hide";
 
@@ -297,6 +299,37 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor, toolbarContextMode }) 
       >
         {"{ }"}
       </button>
+      <button
+        className={btnClass(editor.isActive("plantumlBlock"))}
+        onClick={() => (editor.chain().focus() as any).insertPlantUmlBlock().run()}
+        title="Insert PlantUML Diagram"
+      >
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+          <path d="M4 1C2.34 1 1 2.34 1 4v8c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3H4zm0 1h8c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2zm1.5 2C4.67 4 4 4.67 4 5.5S4.67 7 5.5 7 7 6.33 7 5.5 6.33 4 5.5 4zm5 2C9.67 6 9 6.67 9 7.5S9.67 9 10.5 9 12 8.33 12 7.5 11.33 6 10.5 6zM5 9c-.55 0-1.04.23-1.41.59l-.09.1V12c0 1.1.9 2 2 2h5c1.1 0 2-.9 2-2v-.5c0-.83-.67-1.5-1.5-1.5-.42 0-.79.17-1.06.44l-.44.44-.44-.44C9.79 10.17 9.42 10 9 10s-.79.17-1.06.44l-.44.44-.44-.44C6.79 9.17 6.42 9 6 9h-1z" />
+        </svg>
+      </button>
+      {isInPlantUml && (
+        <>
+          <button
+            className={btnClass(false)}
+            onClick={() => (editor.chain().focus() as any).togglePlantUmlViewMode().run()}
+            title="Toggle Source/Rendered View"
+          >
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+              <path d="M8 3C4.36 3 1.26 5.28.05 8.5c1.21 3.22 4.31 5.5 7.95 5.5s6.74-2.28 7.95-5.5C14.74 5.28 11.64 3 8 3zm0 9.17c-2.01 0-3.64-1.49-3.64-3.33S5.99 5.5 8 5.5s3.64 1.5 3.64 3.34S10.01 12.17 8 12.17zM8 7c-1.1 0-2 .82-2 1.83S6.9 10.67 8 10.67s2-.82 2-1.84S9.1 7 8 7z" />
+            </svg>
+          </button>
+          <button
+            className={btnClass(false)}
+            onClick={() => (editor.chain().focus() as any).refreshPlantUml().run()}
+            title="Refresh Diagram"
+          >
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+              <path d="M13.45 2.55A7.96 7.96 0 008 .5C4.14.5 1.01 3.63 1.01 7.5H0l3.5 3.5L7 7.5H4.51c0-1.93 1.56-3.5 3.49-3.5 1.93 0 3.5 1.57 3.5 3.5s-1.57 3.5-3.5 3.5c-.97 0-1.84-.39-2.48-1.02l-1.41 1.41A5.48 5.48 0 008 13.5c3.04 0 5.5-2.46 5.5-5.5 0-1.52-.62-2.9-1.61-3.89l-.44-.56z" />
+            </svg>
+          </button>
+        </>
+      )}
       <button
         className={btnClass(false)}
         onClick={() => editor.chain().focus().setHorizontalRule().run()}

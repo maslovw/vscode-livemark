@@ -11,6 +11,7 @@ export interface InitMessage {
   contentWidth: number;
   toolbarContextMode: string;
   showLayoutControls: boolean;
+  plantumlServer: string;
 }
 
 export interface DocumentChangedMessage {

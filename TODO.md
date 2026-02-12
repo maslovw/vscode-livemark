@@ -238,7 +238,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ### 9.2 Diagrams
 
 - [ ] Mermaid diagram rendering in fenced code blocks
-- [ ] PlantUML support (optional)
+- [x] PlantUML support (optional)
 - [ ] Graphviz/DOT support (optional)
 
 ---

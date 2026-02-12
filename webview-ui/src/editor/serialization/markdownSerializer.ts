@@ -5,6 +5,7 @@ import remarkStringify from "remark-stringify";
 import remarkGfm from "remark-gfm";
 import remarkFrontmatter from "remark-frontmatter";
 import { tiptapToMdast } from "./tiptapToMdast";
+import { postprocessPlantuml } from "./remarkPlantuml";
 import type { JSONContent } from "@tiptap/core";
 
 const stringifyOptions = {
@@ -26,5 +27,7 @@ export function serializeMarkdown(
 ): string {
   const mdast = tiptapToMdast(doc, baseUri);
   const result = serializer.stringify(mdast as any);
-  return typeof result === "string" ? result : String(result);
+  const markdown = typeof result === "string" ? result : String(result);
+  // Post-process to restore @startuml/@enduml blocks
+  return postprocessPlantuml(markdown);
 }

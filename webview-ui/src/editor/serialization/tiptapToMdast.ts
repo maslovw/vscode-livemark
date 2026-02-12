@@ -150,6 +150,17 @@ function convertNode(
       };
     }
 
+    case "plantumlBlock": {
+      const originalFormat = (node.attrs?.originalFormat as string) || "fenced";
+      const meta = originalFormat === "startuml" ? "originalFormat:startuml" : null;
+      return {
+        type: "code",
+        lang: "plantuml",
+        meta,
+        value: getTextContent(node),
+      };
+    }
+
     case "bulletList":
       return {
         type: "list",

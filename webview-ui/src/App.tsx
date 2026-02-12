@@ -27,6 +27,7 @@ export const App: React.FC = () => {
   const [contentWidth, setContentWidth] = useState<number>(800);
   const [toolbarContextMode, setToolbarContextMode] = useState<string>("disable");
   const [showLayoutControls, setShowLayoutControls] = useState<boolean>(true);
+  const [plantumlServer, setPlantumlServer] = useState<string>("https://www.plantuml.com/plantuml");
   const baseUriRef = useRef<string | undefined>(undefined);
   const { applyTheme } = useTheme();
 
@@ -47,6 +48,7 @@ export const App: React.FC = () => {
             setContentWidth(message.contentWidth || 800);
             setToolbarContextMode(message.toolbarContextMode || "disable");
             setShowLayoutControls(message.showLayoutControls !== false);
+            setPlantumlServer(message.plantumlServer || "https://www.plantuml.com/plantuml");
             setSourceText(message.text);
             if (editorRef.current) {
               loadContent(editorRef.current, message.text);
@@ -361,6 +363,7 @@ export const App: React.FC = () => {
               onDeleteImage={handleDeleteImage}
               onOpenImage={handleOpenImage}
               editorRef={editorRef}
+              plantumlServer={plantumlServer}
             />
             {width === "resizable" && (
               <ResizeHandles

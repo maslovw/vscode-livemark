@@ -15,6 +15,7 @@ import { common, createLowlight } from "lowlight";
 import { ImagePaste } from "./ImagePaste";
 import { ListKeymap } from "./ListKeymap";
 import { TrailingNode } from "./TrailingNode";
+import { PlantUmlBlock } from "./PlantUmlBlock";
 import type { Extensions } from "@tiptap/core";
 
 const lowlight = createLowlight(common);
@@ -24,6 +25,7 @@ interface ExtensionOptions {
   onLinkClick: (href: string) => void;
   onDeleteImage: (imagePath: string) => void;
   onOpenImage: (imagePath: string) => void;
+  plantumlServer?: string;
 }
 
 export function createExtensions({
@@ -31,6 +33,7 @@ export function createExtensions({
   onLinkClick,
   onDeleteImage,
   onOpenImage,
+  plantumlServer,
 }: ExtensionOptions): Extensions {
   return [
     StarterKit.configure({
@@ -84,6 +87,9 @@ export function createExtensions({
     TableCell,
     ImagePaste.configure({
       onImagePaste,
+    }),
+    PlantUmlBlock.configure({
+      plantumlServer: plantumlServer || "https://www.plantuml.com/plantuml",
     }),
     ListKeymap,
     TrailingNode,

@@ -5,7 +5,7 @@ import { getCurrentTheme, onThemeChange } from "./ThemeSync";
 import { saveImage, deleteImageFromDisk, generateImagePath, saveImageWithPath } from "./ImageHandler";
 import { setActiveWebview } from "./commands";
 import type { ExtensionMessage, WebviewMessage } from "./messages";
-import { getConfirmImagePath, getAlignment, getWidthMode, getContentWidth, getToolbarContextMode, getShowLayoutControls } from "./config";
+import { getConfirmImagePath, getAlignment, getWidthMode, getContentWidth, getToolbarContextMode, getShowLayoutControls, getPlantumlServer } from "./config";
 
 export class LivemarkEditorProvider
   implements vscode.CustomTextEditorProvider
@@ -80,6 +80,7 @@ export class LivemarkEditorProvider
               contentWidth: getContentWidth(),
               toolbarContextMode: getToolbarContextMode(),
               showLayoutControls: getShowLayoutControls(),
+              plantumlServer: getPlantumlServer(),
             });
             break;
           }
