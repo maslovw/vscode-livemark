@@ -157,7 +157,7 @@ function convertNode(
         type: "code",
         lang: "plantuml",
         meta,
-        value: getTextContent(node),
+        value: (node.attrs?.source as string) || "",
       };
     }
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
-import { TextSelection } from "@tiptap/pm/state";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { plantumlServerUrl } from "./plantumlEncode";
 import type { PlantUmlBlockOptions } from "./PlantUmlBlock";
 
@@ -14,7 +14,8 @@ export const PlantUmlNodeView: React.FC<NodeViewProps> = ({
   extension,
 }) => {
   const { plantumlServer } = extension.options as PlantUmlBlockOptions;
-  const source = node.textContent || "";
+  // Source is now stored as a node attribute (atom node, no text content)
+  const source = (node.attrs.source as string) || "";
   const viewMode = (node.attrs.viewMode as string) || "rendered";
 
   const [imgUrl, setImgUrl] = useState<string | null>(null);
@@ -91,18 +92,8 @@ export const PlantUmlNodeView: React.FC<NodeViewProps> = ({
 
   const handleSourceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newSource = e.target.value;
-    // Replace the node's text content
-    const pos = getPos();
-    if (typeof pos !== "number") return;
-    const { tr } = editor.view.state;
-    const nodeStart = pos + 1; // inside the node (after the node open token)
-    const nodeEnd = pos + node.nodeSize - 1; // before the node close token
-    tr.replaceWith(
-      nodeStart,
-      nodeEnd,
-      newSource ? editor.view.state.schema.text(newSource) : []
-    );
-    editor.view.dispatch(tr);
+    // Update the source attribute directly (atom node — no ProseMirror content)
+    updateAttributes({ source: newSource });
   };
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -115,18 +106,7 @@ export const PlantUmlNodeView: React.FC<NodeViewProps> = ({
       const end = ta.selectionEnd;
       const value = ta.value;
       const newValue = value.substring(0, start) + "  " + value.substring(end);
-      // Update via the editor to keep things in sync
-      const pos = getPos();
-      if (typeof pos !== "number") return;
-      const { tr } = editor.view.state;
-      const nodeStart = pos + 1;
-      const nodeEnd = pos + node.nodeSize - 1;
-      tr.replaceWith(
-        nodeStart,
-        nodeEnd,
-        newValue ? editor.view.state.schema.text(newValue) : []
-      );
-      editor.view.dispatch(tr);
+      updateAttributes({ source: newValue });
       // Restore cursor position after React re-render
       setTimeout(() => {
         if (textareaRef.current) {
@@ -167,6 +147,28 @@ export const PlantUmlNodeView: React.FC<NodeViewProps> = ({
     setError("Failed to render diagram. Check your PlantUML syntax or server availability.");
   };
 
+  /** Select this plantumlBlock node so keyboard shortcuts and toolbar buttons work. */
+  const selectNode = () => {
+    const pos = getPos();
+    if (typeof pos === "number") {
+      const { tr } = editor.view.state;
+      tr.setSelection(NodeSelection.create(editor.view.state.doc, pos));
+      editor.view.dispatch(tr);
+      editor.view.focus();
+    }
+  };
+
+  /** Click on the rendered container selects the node. */
+  const handleRenderedClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    selectNode();
+  };
+
+  /** Prevent the browser from dragging the image (which would drop its URL into the editor). */
+  const handleDragStart = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   return (
     <NodeViewWrapper
       className={`livemark-plantuml-wrapper${selected ? " selected" : ""}`}
@@ -184,7 +186,11 @@ export const PlantUmlNodeView: React.FC<NodeViewProps> = ({
           placeholder="@startuml&#10;...&#10;@enduml"
         />
       ) : (
-        <div className="livemark-plantuml-rendered">
+        <div
+          className="livemark-plantuml-rendered"
+          onClick={handleRenderedClick}
+          onDragStart={handleDragStart}
+        >
           {loading && (
             <div className="livemark-plantuml-loading">Rendering…</div>
           )}
@@ -196,6 +202,8 @@ export const PlantUmlNodeView: React.FC<NodeViewProps> = ({
               src={imgUrl}
               alt="PlantUML Diagram"
               className="livemark-plantuml-img"
+              draggable={false}
+              onDragStart={handleDragStart}
               onError={handleImgError}
             />
           )}

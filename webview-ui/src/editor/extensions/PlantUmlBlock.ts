@@ -33,11 +33,11 @@ export const PlantUmlBlock = Node.create<PlantUmlBlockOptions>({
 
   group: "block",
 
-  content: "text*",
-
-  marks: "",
-
-  code: true,
+  // Atom node — ProseMirror treats the entire node as a single opaque unit.
+  // React has full control of the DOM inside the NodeView.
+  // This avoids the removeChild crash caused by ProseMirror and React
+  // fighting over DOM ownership when content was "text*".
+  atom: true,
 
   defining: true,
 
@@ -52,6 +52,10 @@ export const PlantUmlBlock = Node.create<PlantUmlBlockOptions>({
     return {
       language: {
         default: "plantuml",
+      },
+      /** The PlantUML diagram source text, stored as an attribute. */
+      source: {
+        default: "",
       },
       viewMode: {
         default: "rendered",
@@ -74,6 +78,7 @@ export const PlantUmlBlock = Node.create<PlantUmlBlockOptions>({
         getAttrs: (el) => {
           const element = el as HTMLElement;
           return {
+            source: element.textContent || "",
             viewMode: element.getAttribute("data-view-mode") || "rendered",
             originalFormat: element.getAttribute("data-original-format") || "fenced",
           };
@@ -90,7 +95,7 @@ export const PlantUmlBlock = Node.create<PlantUmlBlockOptions>({
         "data-view-mode": HTMLAttributes.viewMode || "rendered",
         "data-original-format": HTMLAttributes.originalFormat || "fenced",
       }),
-      ["code", {}, 0],
+      HTMLAttributes.source || "",
     ];
   },
 
@@ -102,16 +107,16 @@ export const PlantUmlBlock = Node.create<PlantUmlBlockOptions>({
     return {
       insertPlantUmlBlock:
         (source?: string) =>
-        ({ commands, state }) => {
+        ({ commands }) => {
           const content = source || "@startuml\n\n@enduml";
           return commands.insertContent({
             type: this.name,
             attrs: {
               language: "plantuml",
+              source: content,
               viewMode: "source",
               originalFormat: "fenced",
             },
-            content: [{ type: "text", text: content }],
           });
         },
 
@@ -119,7 +124,6 @@ export const PlantUmlBlock = Node.create<PlantUmlBlockOptions>({
         () =>
         ({ state, dispatch }) => {
           const { selection } = state;
-          // Find the plantumlBlock node around the selection
           let nodePos: number | null = null;
           let nodeRef: any = null;
           state.doc.nodesBetween(
@@ -178,12 +182,9 @@ export const PlantUmlBlock = Node.create<PlantUmlBlockOptions>({
 
   addKeyboardShortcuts() {
     return {
-      // Enter: allow newlines inside the block (handled by textarea in NodeView)
-      // Backspace on empty block: delete the block
       Backspace: ({ editor }) => {
         const { state } = editor.view;
         const { selection } = state;
-        // Only handle when the block is empty
         let nodePos: number | null = null;
         let nodeRef: any = null;
         state.doc.nodesBetween(
@@ -197,10 +198,10 @@ export const PlantUmlBlock = Node.create<PlantUmlBlockOptions>({
           }
         );
         if (nodePos === null || !nodeRef) return false;
-        if (nodeRef.textContent === "") {
+        const src = (nodeRef.attrs.source as string) || "";
+        if (src === "") {
           const pos = nodePos as number;
           const tr = state.tr.delete(pos, pos + nodeRef.nodeSize);
-          // Place cursor at the deletion point
           const mappedPos = tr.mapping.map(pos);
           if (mappedPos <= tr.doc.content.size) {
             tr.setSelection(TextSelection.create(tr.doc, Math.min(mappedPos, tr.doc.content.size)));

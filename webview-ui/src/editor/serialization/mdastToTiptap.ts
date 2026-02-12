@@ -141,10 +141,10 @@ function convertNode(
           type: "plantumlBlock",
           attrs: {
             language: "plantuml",
+            source: node.value || "",
             viewMode: "rendered",
             originalFormat,
           },
-          content: node.value ? [{ type: "text", text: node.value }] : [],
         };
       }
       return {
