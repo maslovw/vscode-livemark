@@ -43,13 +43,18 @@ export interface LayoutChangedMessage {
   showLayoutControls: boolean;
 }
 
+export interface RequestHtmlExportMessage {
+  type: "ext:requestHtmlExport";
+}
+
 export type ExtensionMessage =
   | InitMessage
   | DocumentChangedMessage
   | ThemeChangedMessage
   | ImageSavedMessage
   | ExecuteCommandMessage
-  | LayoutChangedMessage;
+  | LayoutChangedMessage
+  | RequestHtmlExportMessage;
 
 export interface WebviewReadyMessage {
   type: "webview:ready";
@@ -88,6 +93,12 @@ export interface SetLayoutMessage {
   contentWidth?: number;
 }
 
+export interface HtmlExportMessage {
+  type: "webview:htmlExport";
+  html: string;
+  json?: string;
+}
+
 export type WebviewMessage =
   | WebviewReadyMessage
   | ContentChangedMessage
@@ -95,4 +106,5 @@ export type WebviewMessage =
   | OpenLinkMessage
   | DeleteImageMessage
   | OpenImageMessage
-  | SetLayoutMessage;
+  | SetLayoutMessage
+  | HtmlExportMessage;

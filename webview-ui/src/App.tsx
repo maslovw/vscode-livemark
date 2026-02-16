@@ -102,6 +102,22 @@ export const App: React.FC = () => {
             setShowLayoutControls(message.showLayoutControls !== false);
             break;
           }
+          case "ext:requestHtmlExport": {
+            // Get HTML from the editor with original image paths
+            if (editorRef.current) {
+              // Get JSON and convert to HTML with originalSrc preserved
+              const json = editorRef.current.getJSON();
+              const html = editorRef.current.getHTML();
+              
+              // Send both JSON and HTML so extension can extract image paths
+              postMessage({ 
+                type: "webview:htmlExport", 
+                html,
+                json: JSON.stringify(json)
+              });
+            }
+            break;
+          }
         }
       },
       [isSourceMode]

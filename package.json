@@ -2,7 +2,7 @@
   "name": "livemark",
   "displayName": "Livemark",
   "description": "WYSIWYG Markdown editor for VS Code",
-  "version": "0.1.58",
+  "version": "0.1.65",
   "publisher": "livemark",
   "engines": {
     "vscode": "^1.80.0"
@@ -84,6 +84,10 @@
       {
         "command": "livemark.openWithLivemark",
         "title": "Open with Livemark"
+      },
+      {
+        "command": "livemark.exportAsHtml",
+        "title": "Livemark: Export as HTML (with embedded images)"
       }
     ],
     "keybindings": [
@@ -171,6 +175,18 @@
         {
           "command": "livemark.openWithLivemark",
           "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "navigation"
+        },
+        {
+          "command": "livemark.exportAsHtml",
+          "when": "resourceExtname == .md || resourceExtname == .markdown",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "livemark.exportAsHtml",
+          "when": "resourceLangId == markdown",
           "group": "navigation"
         }
       ]

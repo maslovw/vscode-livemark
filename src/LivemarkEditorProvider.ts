@@ -3,7 +3,7 @@ import * as path from "path";
 import { getNonce } from "./util";
 import { getCurrentTheme, onThemeChange } from "./ThemeSync";
 import { saveImage, deleteImageFromDisk, generateImagePath, saveImageWithPath } from "./ImageHandler";
-import { setActiveWebview } from "./commands";
+import { setActiveWebview, handleHtmlExport } from "./commands";
 import type { ExtensionMessage, WebviewMessage } from "./messages";
 import { getConfirmImagePath, getAlignment, getWidthMode, getContentWidth, getToolbarContextMode, getShowLayoutControls, getPlantumlServer } from "./config";
 
@@ -225,6 +225,10 @@ export class LivemarkEditorProvider
             if (message.contentWidth !== undefined) {
               await config.update("contentWidth", message.contentWidth, vscode.ConfigurationTarget.Global);
             }
+            break;
+          }
+          case "webview:htmlExport": {
+            handleHtmlExport(message.html, message.json);
             break;
           }
         }
