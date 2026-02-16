@@ -63,7 +63,7 @@ export async function exportAsHtml(
 }
 
 /**
- * Embeds images as base64 data URIs in pre-rendered HTML.
+ * Embeds images as base64 data URIs in pre-rendered HTML and adds figure/figcaption.
  */
 async function embedImagesInHtml(
   html: string,
@@ -71,6 +71,12 @@ async function embedImagesInHtml(
   baseDir: string
 ): Promise<string> {
   let processedHtml = html;
+  
+  // Fix links: convert data-href to href for clickability
+  processedHtml = processedHtml.replace(/<a([^>]*)data-href=["']([^"']+)["']([^>]*)>/gi, (match, before, href, after) => {
+    // Remove data-href and add href attribute
+    return `<a${before}href="${href}"${after}>`;
+  });
   
   // Find all img tags in the HTML - look for both src and data-original-src
   const imgRegex = /<img[^>]*>/gi;
@@ -82,9 +88,11 @@ async function embedImagesInHtml(
     // Extract data-original-src or src attribute
     const originalSrcMatch = fullTag.match(/data-original-src=["']([^"']+)["']/i);
     const srcMatch = fullTag.match(/src=["']([^"']+)["']/i);
+    const altMatch = fullTag.match(/alt=["']([^"']*)["']/i);
     
     const originalPath = originalSrcMatch ? originalSrcMatch[1] : null;
     const srcValue = srcMatch ? srcMatch[1] : null;
+    const altValue = altMatch ? altMatch[1] : '';
     
     if (!srcValue) continue;
     
@@ -144,7 +152,13 @@ async function embedImagesInHtml(
     // Remove data-original-src attribute
     newTag = newTag.replace(/\s*data-original-src=["']([^"']+)["']/i, '');
     
-    processedHtml = processedHtml.replace(fullTag, newTag);
+    // Wrap in figure with figcaption if there's an alt text
+    if (altValue) {
+      const figureTag = `<figure class="livemark-image-figure">${newTag}<figcaption class="livemark-image-caption">${escapeHtml(altValue)}</figcaption></figure>`;
+      processedHtml = processedHtml.replace(fullTag, figureTag);
+    } else {
+      processedHtml = processedHtml.replace(fullTag, newTag);
+    }
   }
   
   return processedHtml;
@@ -172,6 +186,21 @@ function wrapHtmlDocument(htmlContent: string, title: string): string {
     img {
       max-width: 100%;
       height: auto;
+    }
+    figure.livemark-image-figure {
+      margin: 1em 0;
+      text-align: center;
+    }
+    figure.livemark-image-figure img {
+      display: block;
+      margin: 0 auto;
+    }
+    figcaption.livemark-image-caption {
+      margin-top: 0.5em;
+      font-size: 0.9em;
+      color: #666;
+      font-style: italic;
+      text-align: center;
     }
     pre {
       background: #f4f4f4;
@@ -402,6 +431,21 @@ async function convertMarkdownToHtml(
     img {
       max-width: 100%;
       height: auto;
+    }
+    figure.livemark-image-figure {
+      margin: 1em 0;
+      text-align: center;
+    }
+    figure.livemark-image-figure img {
+      display: block;
+      margin: 0 auto;
+    }
+    figcaption.livemark-image-caption {
+      margin-top: 0.5em;
+      font-size: 0.9em;
+      color: #666;
+      font-style: italic;
+      text-align: center;
     }
     pre {
       background: #f4f4f4;
