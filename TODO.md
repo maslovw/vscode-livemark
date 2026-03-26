@@ -15,8 +15,8 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ### 1.2 Modal Behavior (optional but recommended)
 
 - [x] Show rendered view in normal/read mode
-- [ ] Show raw Markdown (or minimal syntax hints) in insert/edit mode
-- [ ] Smooth transitions between modes without layout jumps
+- [x] Show raw Markdown (or minimal syntax hints) in insert/edit mode
+- [x] Smooth transitions between modes without layout jumps
 
 ---
 
@@ -82,7 +82,7 @@ Here's a comprehensive requirements list for a rendered Markdown editor plugin (
 ### 3.3 Image Management
 
 - [x] Click on image to open in system viewer or enlarge
-- [ ] Option to resize images (width/height attributes or CSS)
+- [x] Option to resize images (width/height attributes or CSS)
 - [x] Delete image file when Markdown reference is removed (optional, with confirmation)
 - [ ] Update image paths when files are moved/renamed
 

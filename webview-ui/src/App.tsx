@@ -275,7 +275,7 @@ export const App: React.FC = () => {
       const editor = editorRef.current;
       if (!editor) return;
       // Switch to source mode - serialize current content
-      const text = serializeMarkdown(editor.getJSON());
+      const text = serializeMarkdown(editor.getJSON(), baseUriRef.current);
       setSourceText(text);
       setIsSourceMode(true);
     }

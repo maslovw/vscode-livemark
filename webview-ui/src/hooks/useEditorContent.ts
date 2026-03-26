@@ -16,7 +16,7 @@ export function useEditorContent({
   baseUri,
 }: UseEditorContentOptions) {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const suppressUpdateCount = useRef(0);
+  const isLoadingContent = useRef(false);
   const lastSentText = useRef<string>("");
   const baseUriRef = useRef<string | undefined>(baseUri);
   const editorRef = useRef<Editor | null>(null);
@@ -30,6 +30,7 @@ export function useEditorContent({
       clearTimeout(debounceTimer.current);
       debounceTimer.current = null;
     }
+    if (isLoadingContent.current) return;
     const editor = editorRef.current;
     if (!editor) return;
     const text = serializeMarkdown(editor.getJSON(), baseUriRef.current);
@@ -54,10 +55,17 @@ export function useEditorContent({
     (editor: Editor | null, markdown: string) => {
       if (!editor) return;
       editorRef.current = editor;
-      suppressUpdateCount.current++;
+      // Suppress ALL onUpdate calls during setContent and any synchronous
+      // follow-up transactions (e.g. prosemirror-tables fixTables plugin).
+      isLoadingContent.current = true;
       lastSentText.current = markdown;
       const doc = parseMarkdown(markdown, baseUriRef.current);
       editor.commands.setContent(doc);
+      // Release after the current microtask so any synchronous plugin
+      // transactions triggered by setContent are also suppressed.
+      Promise.resolve().then(() => {
+        isLoadingContent.current = false;
+      });
     },
     []
   );
@@ -66,8 +74,7 @@ export function useEditorContent({
     (editor: Editor) => {
       editorRef.current = editor;
 
-      if (suppressUpdateCount.current > 0) {
-        suppressUpdateCount.current--;
+      if (isLoadingContent.current) {
         return;
       }
 

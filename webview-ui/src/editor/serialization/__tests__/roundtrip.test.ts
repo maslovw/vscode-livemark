@@ -127,6 +127,24 @@ describe("roundtrip: parse -> serialize -> parse -> serialize stability", () => 
     );
   });
 
+  it("table with multiple inline code cells", () => {
+    const md =
+      "| Command | Version | Remark |\n| --- | --- | --- |\n| `help` | F019 | A |\n| `cls` | F019 | A |\n| `version` | F019 | A |\n| `temp` | Z040 | |\n| `can` | Z040 | A |\n| `dtc` | Z040 | |\n| `dlt` | Z035 | A |\n| `reboot` | F019 | A |\n| `bootdev` | F019 | |\n| `reset` | F019 | |\n| `set` | F019 | |";
+    const first = roundtrip(md);
+    expect(first).toContain("`help`");
+    expect(first).toContain("`cls`");
+    expect(first).toContain("`version`");
+    expect(first).toContain("`temp`");
+    expect(first).toContain("`can`");
+    expect(first).toContain("`dtc`");
+    expect(first).toContain("`dlt`");
+    expect(first).toContain("`reboot`");
+    expect(first).toContain("`bootdev`");
+    expect(first).toContain("`reset`");
+    expect(first).toContain("`set`");
+    assertStableRoundtrip(md);
+  });
+
   it("single-column table", () => {
     assertStableRoundtrip("| Item |\n| --- |\n| One |\n| Two |");
   });

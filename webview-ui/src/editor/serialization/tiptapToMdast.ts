@@ -337,6 +337,13 @@ function convertInlineContent(
   return result;
 }
 
+/** Recursively extract all text from an MDAST node tree. */
+function extractText(node: MdastNode): string {
+  if (node.value !== undefined) return node.value;
+  if (node.children) return node.children.map(extractText).join("");
+  return "";
+}
+
 function wrapInMark(
   node: MdastNode,
   mark: { type: string; attrs?: Record<string, unknown> }
@@ -349,7 +356,10 @@ function wrapInMark(
     case "strike":
       return { type: "delete", children: [node] };
     case "code":
-      return { type: "inlineCode", value: node.value ?? "" };
+      // MDAST inlineCode uses `value` (not children). Extract text from the
+      // node regardless of nesting depth so that code combined with other
+      // marks (bold+code) doesn't lose its text content.
+      return { type: "inlineCode", value: extractText(node) };
     case "link":
       return {
         type: "link",

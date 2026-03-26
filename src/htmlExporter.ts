@@ -1,10 +1,17 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs/promises";
+import { Alignment, WidthMode } from "./config";
 
 interface ImageReference {
   path: string;
   absolutePath: string;
+}
+
+export interface LayoutSettings {
+  alignment: Alignment;
+  widthMode: WidthMode;
+  contentWidth: number;
 }
 
 /**
@@ -14,7 +21,8 @@ interface ImageReference {
 export async function exportAsHtml(
   document: vscode.TextDocument,
   renderedHtml?: string,
-  editorJson?: string
+  editorJson?: string,
+  layout?: LayoutSettings
 ): Promise<void> {
   const markdownContent = document.getText();
   const documentDir = path.dirname(document.uri.fsPath);
@@ -32,12 +40,12 @@ export async function exportAsHtml(
     htmlContent = await embedImagesInHtml(renderedHtml, imageRefs, documentDir);
   } else {
     // Fall back to simple markdown conversion
-    htmlContent = await convertMarkdownToHtml(markdownContent, imageRefs, documentName);
+    htmlContent = await convertMarkdownToHtml(markdownContent, imageRefs, documentName, layout);
   }
 
   // For pre-rendered HTML, we need to wrap it in a complete document
-  const html = renderedHtml 
-    ? wrapHtmlDocument(htmlContent, documentName)
+  const html = renderedHtml
+    ? wrapHtmlDocument(htmlContent, documentName, layout)
     : htmlContent;
 
   // Prompt user for save location
@@ -165,9 +173,41 @@ async function embedImagesInHtml(
 }
 
 /**
+ * Generates body CSS for layout settings matching the editor's rendered view.
+ */
+function getLayoutCss(layout?: LayoutSettings): string {
+  let maxWidth = '800px';
+  let margin = '0 auto';
+
+  if (layout) {
+    switch (layout.widthMode) {
+      case 'compact':
+        maxWidth = '800px';
+        break;
+      case 'wide':
+        maxWidth = '1200px';
+        break;
+      case 'fit':
+        maxWidth = '100%';
+        break;
+      case 'resizable':
+        maxWidth = `${layout.contentWidth}px`;
+        break;
+    }
+
+    if (layout.alignment === 'left') {
+      margin = '0 auto 0 0';
+    }
+  }
+
+  return `max-width: ${maxWidth};\n      margin: ${margin};`;
+}
+
+/**
  * Wraps HTML content in a complete HTML document with styling.
  */
-function wrapHtmlDocument(htmlContent: string, title: string): string {
+function wrapHtmlDocument(htmlContent: string, title: string, layout?: LayoutSettings): string {
+  const layoutCss = getLayoutCss(layout);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -178,8 +218,7 @@ function wrapHtmlDocument(htmlContent: string, title: string): string {
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
-      max-width: 800px;
-      margin: 0 auto;
+      ${layoutCss}
       padding: 20px;
       color: #333;
     }
@@ -390,7 +429,8 @@ async function addImageToMap(
 async function convertMarkdownToHtml(
   markdown: string,
   imageMap: Map<string, string>,
-  title: string
+  title: string,
+  layout?: LayoutSettings
 ): Promise<string> {
   // Replace image paths with data URIs
   let processedMarkdown = markdown;
@@ -413,6 +453,7 @@ async function convertMarkdownToHtml(
   const htmlContent = simpleMarkdownToHtml(processedMarkdown);
   
   // Wrap in a complete HTML document
+  const layoutCss = getLayoutCss(layout);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -423,8 +464,7 @@ async function convertMarkdownToHtml(
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
-      max-width: 800px;
-      margin: 0 auto;
+      ${layoutCss}
       padding: 20px;
       color: #333;
     }

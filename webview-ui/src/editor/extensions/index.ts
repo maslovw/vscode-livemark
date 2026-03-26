@@ -7,6 +7,8 @@ import TaskItem from "@tiptap/extension-task-item";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { CodeBlockNodeView } from "./CodeBlockNodeView";
 import Table from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
@@ -39,7 +41,11 @@ export function createExtensions({
     StarterKit.configure({
       codeBlock: false,
     }),
-    CodeBlockLowlight.configure({
+    CodeBlockLowlight.extend({
+      addNodeView() {
+        return ReactNodeViewRenderer(CodeBlockNodeView);
+      },
+    }).configure({
       lowlight,
       HTMLAttributes: {
         class: "livemark-code-block",

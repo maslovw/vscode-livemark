@@ -407,6 +407,29 @@ describe("serializeMarkdown", () => {
     expect(md).toContain("|");
   });
 
+  it("serializes a table with inline code in cells", () => {
+    const md = serializeMarkdown(
+      doc(
+        table(
+          tableRow(
+            tableHeaderCell(text("Command")),
+            tableHeaderCell(text("Version"))
+          ),
+          tableRow(
+            tableDataCell(text("help", [{ type: "code" }])),
+            tableDataCell(text("F019"))
+          ),
+          tableRow(
+            tableDataCell(text("version", [{ type: "code" }])),
+            tableDataCell(text("F019"))
+          )
+        )
+      )
+    );
+    expect(md).toContain("`help`");
+    expect(md).toContain("`version`");
+  });
+
   it("serializes a single-column table", () => {
     const md = serializeMarkdown(
       doc(

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import type { ExecuteCommandMessage, RequestHtmlExportMessage } from "./messages";
 import { exportAsHtml } from "./htmlExporter";
+import { getAlignment, getWidthMode, getContentWidth } from "./config";
 
 type PostMessageFn = (message: ExecuteCommandMessage | RequestHtmlExportMessage) => boolean;
 
@@ -149,7 +150,11 @@ export function registerCommands(
           }
         }
 
-        await exportAsHtml(document, renderedHtml, editorJson);
+        await exportAsHtml(document, renderedHtml, editorJson, {
+          alignment: getAlignment(),
+          widthMode: getWidthMode(),
+          contentWidth: getContentWidth(),
+        });
       }
     )
   );

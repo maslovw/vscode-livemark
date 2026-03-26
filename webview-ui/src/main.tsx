@@ -10,6 +10,7 @@ import "./styles/table.css";
 import "./styles/image-caption.css";
 import "./styles/toolbar.css";
 import "./styles/plantuml.css";
+import "./styles/code-block.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

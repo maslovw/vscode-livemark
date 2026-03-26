@@ -294,7 +294,53 @@ export const Toolbar: React.FC<ToolbarProps> = ({ editor, toolbarContextMode }) 
       </button>
       <button
         className={btnClass(editor.isActive("codeBlock"))}
-        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        onClick={() => {
+          const { state } = editor;
+          const { from, to } = state.selection;
+
+          // If already in a code block, toggle off
+          if (editor.isActive("codeBlock")) {
+            editor.chain().focus().toggleCodeBlock().run();
+            return;
+          }
+
+          // Collect text from all selected textblocks
+          const $from = state.doc.resolve(from);
+          const $to = state.doc.resolve(to);
+          const startPos = $from.before(Math.max($from.depth, 1));
+          const endPos = $to.after(Math.max($to.depth, 1));
+
+          const texts: string[] = [];
+          state.doc.nodesBetween(startPos, endPos, (node) => {
+            if (node.isTextblock) {
+              texts.push(node.textContent);
+              return false;
+            }
+          });
+
+          if (texts.length <= 1) {
+            editor.chain().focus().toggleCodeBlock().run();
+          } else {
+            const combinedText = texts.join("\n");
+            editor
+              .chain()
+              .focus()
+              .command(({ tr }) => {
+                tr.replaceRangeWith(
+                  startPos,
+                  endPos,
+                  state.schema.nodes.codeBlock.create(
+                    { language: null },
+                    combinedText
+                      ? state.schema.text(combinedText)
+                      : undefined
+                  )
+                );
+                return true;
+              })
+              .run();
+          }
+        }}
         title="Code Block"
       >
         {"{ }"}
