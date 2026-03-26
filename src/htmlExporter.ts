@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs/promises";
+import * as https from "https";
+import * as http from "http";
 import { Alignment, WidthMode } from "./config";
 
 interface ImageReference {
@@ -22,7 +24,8 @@ export async function exportAsHtml(
   document: vscode.TextDocument,
   renderedHtml?: string,
   editorJson?: string,
-  layout?: LayoutSettings
+  layout?: LayoutSettings,
+  plantumlBlocks?: Array<{ source: string; url: string }>
 ): Promise<void> {
   const markdownContent = document.getText();
   const documentDir = path.dirname(document.uri.fsPath);
@@ -38,6 +41,10 @@ export async function exportAsHtml(
   if (renderedHtml) {
     // Use the pre-rendered HTML from Livemark editor and embed images
     htmlContent = await embedImagesInHtml(renderedHtml, imageRefs, documentDir);
+    // Replace plantuml source blocks with embedded SVG diagram images
+    if (plantumlBlocks && plantumlBlocks.length > 0) {
+      htmlContent = await embedPlantumlDiagrams(htmlContent, plantumlBlocks);
+    }
   } else {
     // Fall back to simple markdown conversion
     htmlContent = await convertMarkdownToHtml(markdownContent, imageRefs, documentName, layout);
@@ -68,6 +75,74 @@ export async function exportAsHtml(
   );
 
   vscode.window.showInformationMessage(`Exported to ${saveUri.fsPath}`);
+}
+
+/**
+ * Replaces <pre data-plantuml> blocks in pre-rendered HTML with embedded SVG
+ * images fetched from the provided PlantUML server URLs.
+ * Blocks are matched in document order against the plantumlBlocks array.
+ */
+async function embedPlantumlDiagrams(
+  html: string,
+  plantumlBlocks: Array<{ source: string; url: string }>
+): Promise<string> {
+  // Match every <pre … data-plantuml … >…</pre> in document order.
+  // The source text inside may contain HTML entities so we can't match by
+  // content — we simply replace each occurrence in order.
+  const preRegex = /<pre[^>]*\bdata-plantuml\b[^>]*>[\s\S]*?<\/pre>/gi;
+  const matches = [...html.matchAll(preRegex)];
+
+  let processedHtml = html;
+  // Iterate in reverse order so that replacing one match doesn't shift the
+  // indices of subsequent ones.
+  for (let i = Math.min(matches.length, plantumlBlocks.length) - 1; i >= 0; i--) {
+    const matchText = matches[i][0];
+    const { url } = plantumlBlocks[i];
+
+    let replacement: string;
+    try {
+      const svgBuffer = await fetchUrl(url);
+      const base64 = svgBuffer.toString("base64");
+      const dataUri = `data:image/svg+xml;base64,${base64}`;
+      replacement = `<img src="${dataUri}" alt="PlantUML Diagram" style="max-width:100%;height:auto;">`;
+    } catch (err) {
+      console.warn(`Failed to fetch PlantUML diagram from ${url}:`, err);
+      // Fall back to a live URL reference so the diagram still appears when
+      // the exported file is opened with internet access.
+      replacement = `<img src="${url}" alt="PlantUML Diagram" style="max-width:100%;height:auto;">`;
+    }
+
+    // Replace only this specific occurrence (safe because we go in reverse)
+    const matchIndex = matches[i].index!;
+    processedHtml =
+      processedHtml.slice(0, matchIndex) +
+      replacement +
+      processedHtml.slice(matchIndex + matchText.length);
+  }
+
+  return processedHtml;
+}
+
+/**
+ * Fetches an HTTP/HTTPS URL and returns the response body as a Buffer.
+ */
+function fetchUrl(url: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const mod = url.startsWith("https://") ? https : http;
+    mod
+      .get(url, (res) => {
+        if (res.statusCode !== 200) {
+          reject(new Error(`HTTP ${res.statusCode} fetching ${url}`));
+          res.resume();
+          return;
+        }
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => resolve(Buffer.concat(chunks)));
+        res.on("error", reject);
+      })
+      .on("error", reject);
+  });
 }
 
 /**

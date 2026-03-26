@@ -10,6 +10,7 @@ import { useEditorContent } from "./hooks/useEditorContent";
 import { useTheme } from "./hooks/useTheme";
 import { serializeMarkdown } from "./editor/serialization/markdownSerializer";
 import { resolveImageUrl } from "./editor/serialization/mdastToTiptap";
+import { plantumlServerUrl } from "./editor/extensions/plantumlEncode";
 import type { ExtensionMessage } from "./messages";
 
 export const App: React.FC = () => {
@@ -28,6 +29,7 @@ export const App: React.FC = () => {
   const [toolbarContextMode, setToolbarContextMode] = useState<string>("disable");
   const [showLayoutControls, setShowLayoutControls] = useState<boolean>(true);
   const [plantumlServer, setPlantumlServer] = useState<string>("https://www.plantuml.com/plantuml");
+  const plantumlServerRef = useRef<string>("https://www.plantuml.com/plantuml");
   const baseUriRef = useRef<string | undefined>(undefined);
   const { applyTheme } = useTheme();
 
@@ -48,7 +50,9 @@ export const App: React.FC = () => {
             setContentWidth(message.contentWidth || 800);
             setToolbarContextMode(message.toolbarContextMode || "disable");
             setShowLayoutControls(message.showLayoutControls !== false);
-            setPlantumlServer(message.plantumlServer || "https://www.plantuml.com/plantuml");
+            const server = message.plantumlServer || "https://www.plantuml.com/plantuml";
+            setPlantumlServer(server);
+            plantumlServerRef.current = server;
             setSourceText(message.text);
             if (editorRef.current) {
               loadContent(editorRef.current, message.text);
@@ -103,19 +107,46 @@ export const App: React.FC = () => {
             break;
           }
           case "ext:requestHtmlExport": {
-            // Get HTML from the editor with original image paths
-            if (editorRef.current) {
-              // Get JSON and convert to HTML with originalSrc preserved
-              const json = editorRef.current.getJSON();
-              const html = editorRef.current.getHTML();
-              
-              // Send both JSON and HTML so extension can extract image paths
-              postMessage({ 
-                type: "webview:htmlExport", 
-                html,
-                json: JSON.stringify(json)
-              });
-            }
+            // Async work runs in a void IIFE because the callback is synchronous
+            void (async () => {
+              // Get HTML from the editor with original image paths
+              if (editorRef.current) {
+                // Get JSON and convert to HTML with originalSrc preserved
+                const json = editorRef.current.getJSON();
+                const html = editorRef.current.getHTML();
+
+                // Collect plantuml blocks and their rendered server URLs so the
+                // extension can embed the actual diagrams in the exported HTML.
+                const plantumlBlocks: Array<{ source: string; url: string }> = [];
+                const collectPlantuml = async (node: any) => {
+                  if (node.type === "plantumlBlock" && node.attrs?.source) {
+                    try {
+                      const url = await plantumlServerUrl(
+                        node.attrs.source as string,
+                        plantumlServerRef.current
+                      );
+                      plantumlBlocks.push({ source: node.attrs.source as string, url });
+                    } catch {
+                      // skip blocks that fail to encode
+                    }
+                  }
+                  if (node.content) {
+                    for (const child of node.content) {
+                      await collectPlantuml(child);
+                    }
+                  }
+                };
+                await collectPlantuml(json);
+
+                // Send both JSON and HTML so extension can extract image paths
+                postMessage({
+                  type: "webview:htmlExport",
+                  html,
+                  json: JSON.stringify(json),
+                  plantumlBlocks: plantumlBlocks.length > 0 ? plantumlBlocks : undefined,
+                });
+              }
+            })();
             break;
           }
         }

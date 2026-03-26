@@ -228,7 +228,7 @@ export class LivemarkEditorProvider
             break;
           }
           case "webview:htmlExport": {
-            handleHtmlExport(message.html, message.json);
+            handleHtmlExport(message.html, message.json, message.plantumlBlocks);
             break;
           }
         }

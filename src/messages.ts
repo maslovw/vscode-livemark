@@ -97,6 +97,7 @@ export interface HtmlExportMessage {
   type: "webview:htmlExport";
   html: string;
   json?: string;
+  plantumlBlocks?: Array<{ source: string; url: string }>;
 }
 
 export type WebviewMessage =

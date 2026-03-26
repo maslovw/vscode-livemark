@@ -38,25 +38,25 @@ const COMMAND_MAP: Record<string, string> = {
 };
 
 let activePostMessage: PostMessageFn | null = null;
-let pendingHtmlExportResolve: ((result: { html: string; json?: string }) => void) | null = null;
+let pendingHtmlExportResolve: ((result: { html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }> }) => void) | null = null;
 
 export function setActiveWebview(postMessage: PostMessageFn | null): void {
   activePostMessage = postMessage;
 }
 
-export function handleHtmlExport(html: string, json?: string): void {
+export function handleHtmlExport(html: string, json?: string, plantumlBlocks?: Array<{ source: string; url: string }>): void {
   if (pendingHtmlExportResolve) {
-    pendingHtmlExportResolve({ html, json });
+    pendingHtmlExportResolve({ html, json, plantumlBlocks });
     pendingHtmlExportResolve = null;
   }
 }
 
-async function requestHtmlFromWebview(timeoutMs: number = 5000): Promise<{ html: string; json?: string } | null> {
+async function requestHtmlFromWebview(timeoutMs: number = 5000): Promise<{ html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }> } | null> {
   if (!activePostMessage) {
     return null;
   }
 
-  return new Promise<{ html: string; json?: string } | null>((resolve) => {
+  return new Promise<{ html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }> } | null>((resolve) => {
     const timeout = setTimeout(() => {
       pendingHtmlExportResolve = null;
       resolve(null);
@@ -142,11 +142,13 @@ export function registerCommands(
         // If we're in the Livemark editor, try to get rendered HTML
         let renderedHtml: string | undefined;
         let editorJson: string | undefined;
+        let plantumlBlocks: Array<{ source: string; url: string }> | undefined;
         if (isLivemarkEditor && activePostMessage) {
           const result = await requestHtmlFromWebview();
           if (result) {
             renderedHtml = result.html;
             editorJson = result.json;
+            plantumlBlocks = result.plantumlBlocks;
           }
         }
 
@@ -154,7 +156,7 @@ export function registerCommands(
           alignment: getAlignment(),
           widthMode: getWidthMode(),
           contentWidth: getContentWidth(),
-        });
+        }, plantumlBlocks);
       }
     )
   );
