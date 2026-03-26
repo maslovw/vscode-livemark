@@ -33,10 +33,14 @@ export function useEditorContent({
     if (isLoadingContent.current) return;
     const editor = editorRef.current;
     if (!editor) return;
-    const text = serializeMarkdown(editor.getJSON(), baseUriRef.current);
-    if (text !== lastSentText.current) {
-      lastSentText.current = text;
-      postMessageRef.current({ type: "webview:contentChanged", text });
+    try {
+      const text = serializeMarkdown(editor.getJSON(), baseUriRef.current);
+      if (text !== lastSentText.current) {
+        lastSentText.current = text;
+        postMessageRef.current({ type: "webview:contentChanged", text });
+      }
+    } catch (err) {
+      console.error("[Livemark] Serialization error during flush:", err);
     }
   }, []);
 
@@ -84,10 +88,14 @@ export function useEditorContent({
 
       debounceTimer.current = setTimeout(() => {
         debounceTimer.current = null;
-        const text = serializeMarkdown(editor.getJSON(), baseUriRef.current);
-        if (text !== lastSentText.current) {
-          lastSentText.current = text;
-          postMessage({ type: "webview:contentChanged", text });
+        try {
+          const text = serializeMarkdown(editor.getJSON(), baseUriRef.current);
+          if (text !== lastSentText.current) {
+            lastSentText.current = text;
+            postMessage({ type: "webview:contentChanged", text });
+          }
+        } catch (err) {
+          console.error("[Livemark] Serialization error in debounced update:", err);
         }
       }, DEBOUNCE_MS);
     },

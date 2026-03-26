@@ -419,9 +419,6 @@ export const App: React.FC = () => {
           }
           break;
         }
-        case "toggleSourceMode":
-          // Handled above, before the editor check
-          break;
       }
     },
     [] // Refs avoid stale closures
@@ -468,11 +465,18 @@ export const App: React.FC = () => {
     isSourceModeRef.current = isSourceMode;
   }, [isSourceMode]);
 
+  const sourceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleSourceChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const text = e.target.value;
       setSourceText(text);
-      postMessage({ type: "webview:contentChanged", text });
+      if (sourceDebounceRef.current) {
+        clearTimeout(sourceDebounceRef.current);
+      }
+      sourceDebounceRef.current = setTimeout(() => {
+        sourceDebounceRef.current = null;
+        postMessage({ type: "webview:contentChanged", text });
+      }, 300);
     },
     [postMessage]
   );

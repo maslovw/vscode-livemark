@@ -1,6 +1,15 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { getImageSaveFolder, getImageNamePattern } from "./config";
+import { isInsideDirectory } from "./util";
+
+/** Returns the allowed root directory: workspace root or document directory. */
+function getAllowedRoot(documentUri: vscode.Uri): string {
+  const workspaceFolder = vscode.workspace.getWorkspaceFolder(documentUri);
+  return workspaceFolder
+    ? workspaceFolder.uri.fsPath
+    : path.dirname(documentUri.fsPath);
+}
 
 export async function deleteImageFromDisk(
   documentUri: vscode.Uri,
@@ -8,6 +17,13 @@ export async function deleteImageFromDisk(
 ): Promise<void> {
   const docDir = path.dirname(documentUri.fsPath);
   const absolutePath = path.resolve(docDir, imagePath);
+
+  // Security: prevent path traversal outside workspace/document directory
+  const allowedRoot = getAllowedRoot(documentUri);
+  if (!isInsideDirectory(absolutePath, allowedRoot)) {
+    throw new Error(`Path traversal blocked: ${imagePath} resolves outside the workspace`);
+  }
+
   const fileUri = vscode.Uri.file(absolutePath);
 
   try {
@@ -40,11 +56,12 @@ function computeImagePaths(
   const ext = path.extname(originalFileName) || ".png";
   const namePattern = getImageNamePattern();
   const timestamp = Date.now().toString();
+  const randomSuffix = Math.random().toString(36).slice(2, 6);
   const docName = path.basename(documentUri.fsPath, path.extname(documentUri.fsPath));
   const baseName = namePattern
     .replace("{timestamp}", timestamp)
     .replace("{original}", path.basename(originalFileName, ext))
-    .replace("{hash}", timestamp.slice(-8))
+    .replace("{hash}", timestamp.slice(-8) + randomSuffix)
     .replace("{mdfilename}", docName);
 
   const fileName = baseName + ext;
@@ -91,6 +108,13 @@ export async function saveImageWithPath(
 ): Promise<string> {
   const docDir = path.dirname(documentUri.fsPath);
   const absolutePath = path.resolve(docDir, userProvidedPath);
+
+  // Security: prevent path traversal outside workspace/document directory
+  const allowedRoot = getAllowedRoot(documentUri);
+  if (!isInsideDirectory(absolutePath, allowedRoot)) {
+    throw new Error(`Path traversal blocked: "${userProvidedPath}" resolves outside the workspace`);
+  }
+
   const dirPath = path.dirname(absolutePath);
 
   // Ensure directory exists

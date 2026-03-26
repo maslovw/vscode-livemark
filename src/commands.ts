@@ -63,7 +63,7 @@ async function requestHtmlFromWebview(timeoutMs: number = 5000): Promise<{ html:
       resolve(null);
     }, timeoutMs);
 
-    pendingHtmlExportResolve = (result: { html: string; json?: string }) => {
+    pendingHtmlExportResolve = (result) => {
       clearTimeout(timeout);
       resolve(result);
     };
@@ -114,10 +114,17 @@ export function registerCommands(
   disposables.push(
     vscode.commands.registerCommand(
       "livemark.exportAsHtml",
-      async () => {
+      async (uri?: vscode.Uri) => {
         // Try to get document from active text editor first
-        let document = vscode.window.activeTextEditor?.document;
+        let document: vscode.TextDocument | undefined;
         let isLivemarkEditor = false;
+
+        // If invoked from explorer context menu, uri is provided
+        if (uri) {
+          document = await vscode.workspace.openTextDocument(uri);
+        } else {
+          document = vscode.window.activeTextEditor?.document;
+        }
         
         // If not available, try to get from active tab (for custom editors)
         if (!document) {

@@ -309,11 +309,17 @@ function convertListItemContent(
   return result;
 }
 
-interface InlineResult {
+interface InlineTextResult {
   type: "text";
   text: string;
   marks?: Array<{ type: string; attrs?: Record<string, unknown> }>;
 }
+
+interface InlineHardBreakResult {
+  type: "hardBreak";
+}
+
+type InlineResult = InlineTextResult | InlineHardBreakResult;
 
 function convertInlineChildren(
   nodes: MdastNode[],
@@ -405,7 +411,7 @@ function convertInlineNode(
       ];
 
     case "break":
-      return [];
+      return [{ type: "hardBreak" }];
 
     default:
       return node.value

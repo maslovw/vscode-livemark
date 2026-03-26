@@ -41,10 +41,15 @@ const TESTSUITE_DIR = path.resolve(
 // ---------------------------------------------------------------------------
 // Collect .md files from the test suite root (not extensions/ subdirectories)
 // ---------------------------------------------------------------------------
-const mdFiles = fs
-  .readdirSync(TESTSUITE_DIR)
-  .filter((f) => f.endsWith(".md"))
-  .sort();
+
+const TESTSUITE_EXISTS = fs.existsSync(TESTSUITE_DIR);
+
+const mdFiles = TESTSUITE_EXISTS
+  ? fs
+      .readdirSync(TESTSUITE_DIR)
+      .filter((f) => f.endsWith(".md"))
+      .sort()
+  : [];
 
 // ---------------------------------------------------------------------------
 // Features that Livemark does not support or that cause known roundtrip
@@ -198,7 +203,7 @@ function stripPositions(obj: unknown): unknown {
 // ---------------------------------------------------------------------------
 // Test: parsing does not throw
 // ---------------------------------------------------------------------------
-describe("markdown-testsuite: parsing does not throw", () => {
+describe.skipIf(!TESTSUITE_EXISTS)("markdown-testsuite: parsing does not throw", () => {
   for (const file of mdFiles) {
     it(`parses ${file} without error`, () => {
       const md = fs.readFileSync(path.join(TESTSUITE_DIR, file), "utf-8");
@@ -210,7 +215,7 @@ describe("markdown-testsuite: parsing does not throw", () => {
 // ---------------------------------------------------------------------------
 // Test: parsed output has valid document structure
 // ---------------------------------------------------------------------------
-describe("markdown-testsuite: parsed output is a valid TipTap doc", () => {
+describe.skipIf(!TESTSUITE_EXISTS)("markdown-testsuite: parsed output is a valid TipTap doc", () => {
   for (const file of mdFiles) {
     it(`${file} produces a doc with content`, () => {
       const md = fs.readFileSync(path.join(TESTSUITE_DIR, file), "utf-8");
@@ -225,7 +230,7 @@ describe("markdown-testsuite: parsed output is a valid TipTap doc", () => {
 // ---------------------------------------------------------------------------
 // Test: serialization does not throw
 // ---------------------------------------------------------------------------
-describe("markdown-testsuite: serialization does not throw", () => {
+describe.skipIf(!TESTSUITE_EXISTS)("markdown-testsuite: serialization does not throw", () => {
   for (const file of mdFiles) {
     it(`serializes ${file} without error`, () => {
       const md = fs.readFileSync(path.join(TESTSUITE_DIR, file), "utf-8");
@@ -242,7 +247,7 @@ describe("markdown-testsuite: serialization does not throw", () => {
 // After one roundtrip through the serialization layer the TipTap JSON
 // structure must stabilize (even if the markdown surface form changed).
 // ---------------------------------------------------------------------------
-describe("markdown-testsuite: roundtrip structural stability", () => {
+describe.skipIf(!TESTSUITE_EXISTS)("markdown-testsuite: roundtrip structural stability", () => {
   for (const file of mdFiles) {
     const testFn = SKIP_ROUNDTRIP.has(file) ? it.skip : it;
 
@@ -271,7 +276,7 @@ describe("markdown-testsuite: roundtrip structural stability", () => {
 // The invariant: serialize(parse(serialize(parse(md)))) === serialize(parse(md))
 // After one roundtrip the markdown text output itself should be stable.
 // ---------------------------------------------------------------------------
-describe("markdown-testsuite: double-roundtrip markdown text stability", () => {
+describe.skipIf(!TESTSUITE_EXISTS)("markdown-testsuite: double-roundtrip markdown text stability", () => {
   for (const file of mdFiles) {
     const testFn = SKIP_ROUNDTRIP.has(file) ? it.skip : it;
 

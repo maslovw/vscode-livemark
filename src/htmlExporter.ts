@@ -411,11 +411,21 @@ async function embedPlantumlDiagrams(
 /**
  * Fetches an HTTP/HTTPS URL and returns the response body as a Buffer.
  */
-function fetchUrl(url: string): Promise<Buffer> {
+function fetchUrl(url: string, maxRedirects: number = 5, timeoutMs: number = 15000): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const mod = url.startsWith("https://") ? https : http;
-    mod
-      .get(url, (res) => {
+    const req = mod
+      .get(url, { timeout: timeoutMs }, (res) => {
+        // Follow redirects (301, 302, 307, 308)
+        if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          res.resume();
+          if (maxRedirects <= 0) {
+            reject(new Error(`Too many redirects fetching ${url}`));
+            return;
+          }
+          fetchUrl(res.headers.location, maxRedirects - 1, timeoutMs).then(resolve, reject);
+          return;
+        }
         if (res.statusCode !== 200) {
           reject(new Error(`HTTP ${res.statusCode} fetching ${url}`));
           res.resume();
@@ -427,6 +437,10 @@ function fetchUrl(url: string): Promise<Buffer> {
         res.on("error", reject);
       })
       .on("error", reject);
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error(`Timeout fetching ${url} after ${timeoutMs}ms`));
+    });
   });
 }
 

@@ -22,8 +22,14 @@ const EXPECTED_COMMANDS = [
   "livemark.setHeading1",
   "livemark.setHeading2",
   "livemark.setHeading3",
+  "livemark.setHeading4",
+  "livemark.setHeading5",
+  "livemark.setHeading6",
+  "livemark.increaseHeadingLevel",
+  "livemark.decreaseHeadingLevel",
   "livemark.toggleSourceMode",
   "livemark.openWithLivemark",
+  "livemark.exportAsHtml",
 ];
 
 suite("Livemark Extension Integration Tests", () => {

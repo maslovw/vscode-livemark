@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { getNonce } from "./util";
+import { getNonce, isInsideDirectory } from "./util";
 import { getCurrentTheme, onThemeChange } from "./ThemeSync";
 import { saveImage, deleteImageFromDisk, generateImagePath, saveImageWithPath } from "./ImageHandler";
 import { setActiveWebview, handleHtmlExport } from "./commands";
@@ -54,7 +54,10 @@ export class LivemarkEditorProvider
 
     // Post typed message helper
     const postMessage = (message: ExtensionMessage): boolean => {
-      return webview.postMessage(message) as unknown as boolean;
+      // postMessage returns Thenable<boolean>; fire-and-forget is acceptable here
+      // because delivery failure only happens when the webview is disposed.
+      void webview.postMessage(message);
+      return true;
     };
 
     // Active webview is set by onDidChangeViewState below (not here at open time,
@@ -169,6 +172,15 @@ export class LivemarkEditorProvider
           }          case "webview:openImage": {
             const docDir = path.dirname(document.uri.fsPath);
             const imagePath = path.resolve(docDir, message.imagePath);
+
+            // Security: prevent path traversal
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+            const allowedRoot = workspaceFolder ? workspaceFolder.uri.fsPath : docDir;
+            if (!isInsideDirectory(imagePath, allowedRoot)) {
+              vscode.window.showWarningMessage(`Cannot open image outside workspace: ${message.imagePath}`);
+              break;
+            }
+
             const imageUri = vscode.Uri.file(imagePath);
             try {
               await vscode.commands.executeCommand(
@@ -296,7 +308,10 @@ export class LivemarkEditorProvider
 
     // Cleanup
     webviewPanel.onDidDispose(() => {
-      setActiveWebview(null);
+      // Only clear active webview if this panel owns it
+      if (webviewPanel.active) {
+        setActiveWebview(null);
+      }
       messageDisposable.dispose();
       changeDisposable.dispose();
       themeDisposable.dispose();

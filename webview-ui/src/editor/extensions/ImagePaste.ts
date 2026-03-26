@@ -36,15 +36,18 @@ export const ImagePaste = Extension.create<ImagePasteOptions>({
                   const result = reader.result as string;
                   // Strip data URL prefix
                   const base64 = result.split(",")[1];
-                  const ext = file.type.split("/")[1] || "png";
+                  // Handle compound MIME subtypes like "svg+xml" → "svg"
+                  const rawExt = file.type.split("/")[1] || "png";
+                  const ext = rawExt.split("+")[0];
                   const fileName = `paste.${ext}`;
                   onImagePaste(base64, fileName);
                 };
                 reader.readAsDataURL(file);
-                return true;
+                // Don't return true here — continue processing remaining images
               }
             }
-            return false;
+            // Return true if we handled at least one image
+            return Array.from(items).some((item) => item.type.startsWith("image/"));
           },
 
           handleDrop(view, event) {
