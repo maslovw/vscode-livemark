@@ -115,6 +115,20 @@ export const App: React.FC = () => {
                 const json = editorRef.current.getJSON();
                 const html = editorRef.current.getHTML();
 
+                // Capture the actual rendered DOM — this contains PlantUML as
+                // real <img> tags, syntax-highlighted code, figure+figcaption
+                // for images, etc. The extension uses this for a pixel-perfect
+                // export that looks exactly like the rendered view.
+                const editorEl = document.querySelector(".livemark-editor-content") as HTMLElement | null;
+                const domHtml = editorEl?.innerHTML ?? undefined;
+
+                // Current theme so the exported CSS can match the editor's look
+                const theme = (document.documentElement.getAttribute("data-theme") ?? "light") as
+                  | "light"
+                  | "dark"
+                  | "high-contrast"
+                  | "high-contrast-light";
+
                 // Collect plantuml blocks and their rendered server URLs so the
                 // extension can embed the actual diagrams in the exported HTML.
                 const plantumlBlocks: Array<{ source: string; url: string }> = [];
@@ -143,6 +157,8 @@ export const App: React.FC = () => {
                   type: "webview:htmlExport",
                   html,
                   json: JSON.stringify(json),
+                  domHtml,
+                  theme,
                   plantumlBlocks: plantumlBlocks.length > 0 ? plantumlBlocks : undefined,
                 });
               }

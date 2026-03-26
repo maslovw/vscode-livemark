@@ -98,6 +98,8 @@ export interface HtmlExportMessage {
   html: string;
   json?: string;
   plantumlBlocks?: Array<{ source: string; url: string }>;
+  domHtml?: string;
+  theme?: "light" | "dark" | "high-contrast" | "high-contrast-light";
 }
 
 export type WebviewMessage =

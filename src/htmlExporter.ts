@@ -25,35 +25,45 @@ export async function exportAsHtml(
   renderedHtml?: string,
   editorJson?: string,
   layout?: LayoutSettings,
-  plantumlBlocks?: Array<{ source: string; url: string }>
+  plantumlBlocks?: Array<{ source: string; url: string }>,
+  domHtml?: string,
+  theme?: string,
+  extensionContext?: vscode.ExtensionContext
 ): Promise<void> {
   const markdownContent = document.getText();
   const documentDir = path.dirname(document.uri.fsPath);
   const documentName = path.basename(document.uri.fsPath, path.extname(document.uri.fsPath));
 
-  // Find all image references in markdown or editor JSON
-  const imageRefs = editorJson 
-    ? await extractImageReferencesFromJson(editorJson, documentDir)
-    : await extractImageReferences(markdownContent, documentDir);
+  let html: string;
 
-  // Convert markdown to HTML with embedded images
-  let htmlContent: string;
-  if (renderedHtml) {
-    // Use the pre-rendered HTML from Livemark editor and embed images
-    htmlContent = await embedImagesInHtml(renderedHtml, imageRefs, documentDir);
-    // Replace plantuml source blocks with embedded SVG diagram images
-    if (plantumlBlocks && plantumlBlocks.length > 0) {
-      htmlContent = await embedPlantumlDiagrams(htmlContent, plantumlBlocks);
-    }
+  if (domHtml) {
+    // Primary path: use real DOM snapshot from the webview for pixel-perfect export
+    html = await buildDomHtmlDocument(domHtml, documentDir, documentName, layout, theme, extensionContext);
   } else {
-    // Fall back to simple markdown conversion
-    htmlContent = await convertMarkdownToHtml(markdownContent, imageRefs, documentName, layout);
-  }
+    // Find all image references in markdown or editor JSON
+    const imageRefs = editorJson
+      ? await extractImageReferencesFromJson(editorJson, documentDir)
+      : await extractImageReferences(markdownContent, documentDir);
 
-  // For pre-rendered HTML, we need to wrap it in a complete document
-  const html = renderedHtml
-    ? wrapHtmlDocument(htmlContent, documentName, layout)
-    : htmlContent;
+    // Convert markdown to HTML with embedded images
+    let htmlContent: string;
+    if (renderedHtml) {
+      // Use the pre-rendered HTML from Livemark editor and embed images
+      htmlContent = await embedImagesInHtml(renderedHtml, imageRefs, documentDir);
+      // Replace plantuml source blocks with embedded SVG diagram images
+      if (plantumlBlocks && plantumlBlocks.length > 0) {
+        htmlContent = await embedPlantumlDiagrams(htmlContent, plantumlBlocks);
+      }
+    } else {
+      // Fall back to simple markdown conversion
+      htmlContent = await convertMarkdownToHtml(markdownContent, imageRefs, documentName, layout);
+    }
+
+    // For pre-rendered HTML, we need to wrap it in a complete document
+    html = renderedHtml
+      ? wrapHtmlDocument(htmlContent, documentName, layout)
+      : htmlContent;
+  }
 
   // Prompt user for save location
   const saveUri = await vscode.window.showSaveDialog({
@@ -75,6 +85,281 @@ export async function exportAsHtml(
   );
 
   vscode.window.showInformationMessage(`Exported to ${saveUri.fsPath}`);
+}
+
+// ─── DOM-snapshot export (primary path) ─────────────────────────────────────
+
+/**
+ * Builds a self-contained HTML document from the actual rendered DOM snapshot
+ * captured from the webview. Produces an export that looks exactly like the
+ * editor's rendered view, including PlantUML diagrams and syntax-highlighted
+ * code blocks.
+ */
+async function buildDomHtmlDocument(
+  domHtml: string,
+  baseDir: string,
+  title: string,
+  layout?: LayoutSettings,
+  theme?: string,
+  extensionContext?: vscode.ExtensionContext
+): Promise<string> {
+  const isDark = theme === 'dark' || theme === 'high-contrast';
+  const themeKind = isDark ? 'dark' : 'light';
+
+  let processedHtml = domHtml;
+
+  // 1. Fix links: convert data-href to href so they are clickable
+  processedHtml = processedHtml.replace(
+    /<a([^>]*)\bdata-href=["']([^"']+)["']([^>]*)>/gi,
+    (_m, before, href, after) => `<a${before}href="${href}"${after}>`
+  );
+
+  // 2. Remove contenteditable attributes (figure captions, etc.)
+  processedHtml = processedHtml.replace(/ contenteditable="[^"]*"/gi, '');
+  processedHtml = processedHtml.replace(/ contenteditable='[^']*'/gi, '');
+
+  // 3. Embed PlantUML SVG images in-place
+  processedHtml = await embedDomPlantumlImages(processedHtml);
+
+  // 4. Embed local images referenced via data-original-src
+  processedHtml = await embedDomLocalImages(processedHtml, baseDir);
+
+  // 5. Read bundled webview CSS from the extension package
+  let bundledCss = '';
+  if (extensionContext) {
+    try {
+      const cssUri = vscode.Uri.joinPath(extensionContext.extensionUri, 'dist-webview', 'assets', 'index.css');
+      const cssBytes = await vscode.workspace.fs.readFile(cssUri);
+      bundledCss = Buffer.from(cssBytes).toString('utf-8');
+    } catch (err) {
+      console.warn('Could not read bundled CSS for HTML export:', err);
+    }
+  }
+
+  // Calculate layout CSS for the content area
+  let maxWidth = '800px';
+  let margin = '0 auto';
+  if (layout) {
+    switch (layout.widthMode) {
+      case 'compact':  maxWidth = '800px';  break;
+      case 'wide':     maxWidth = '1200px'; break;
+      case 'fit':      maxWidth = '100%';   break;
+      case 'resizable': maxWidth = `${layout.contentWidth}px`; break;
+    }
+    if (layout.alignment === 'left') { margin = '0 auto 0 0'; }
+  }
+
+  const themeCssVars = isDark ? getDarkThemeCssVars() : getLightThemeCssVars();
+
+  return `<!DOCTYPE html>
+<html lang="en" data-theme="${themeKind}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)}</title>
+  ${bundledCss ? `<style>\n${bundledCss}\n  </style>` : ''}
+  <style>
+    /* ── Standalone export overrides ── */
+    /* Override CSS variables with hardcoded theme values (no --vscode-* vars available) */
+    :root {${themeCssVars}
+    }
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    /* Apply layout to the content wrapper */
+    .livemark-editor-content {
+      max-width: ${maxWidth};
+      margin: ${margin};
+      padding: 20px 40px;
+      box-sizing: border-box;
+    }
+    /* Hide editor-only UI chrome */
+    .livemark-code-block-lang-selector {
+      display: none !important;
+    }
+    /* Remove selection / focus highlight visuals */
+    .livemark-image-wrapper.selected,
+    .livemark-plantuml-wrapper.selected {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    .livemark-table .selectedCell::after {
+      display: none !important;
+    }
+    /* Links are clickable in the exported document */
+    .livemark-editor-content a,
+    .livemark-editor-content .livemark-link {
+      cursor: pointer !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="livemark-editor-content">
+${processedHtml}
+  </div>
+</body>
+</html>`;
+}
+
+/**
+ * Fetches each PlantUML <img class="livemark-plantuml-img"> URL and replaces
+ * the src attribute with an embedded base64 SVG data URI.
+ */
+async function embedDomPlantumlImages(html: string): Promise<string> {
+  // Match <img> tags that have livemark-plantuml-img class
+  const imgRegex = /<img([^>]*\bclass="[^"]*livemark-plantuml-img[^"]*"[^>]*)>/gi;
+  const matches = [...html.matchAll(imgRegex)];
+
+  let result = html;
+  for (let i = matches.length - 1; i >= 0; i--) {
+    const fullTag = matches[i][0];
+    const srcMatch = fullTag.match(/\bsrc=["']([^"']+)["']/i);
+    if (!srcMatch) { continue; }
+    const url = srcMatch[1];
+    if (url.startsWith('data:')) { continue; } // already embedded
+
+    try {
+      const svgBuffer = await fetchUrl(url);
+      const base64 = svgBuffer.toString('base64');
+      const newTag = fullTag.replace(/\bsrc=["'][^"']+["']/i, `src="data:image/svg+xml;base64,${base64}"`);
+      const idx = matches[i].index!;
+      result = result.slice(0, idx) + newTag + result.slice(idx + fullTag.length);
+    } catch (err) {
+      console.warn(`Could not embed PlantUML diagram from ${url}:`, err);
+      // Keep the original URL — diagram still shows when online
+    }
+  }
+  return result;
+}
+
+/**
+ * Replaces vscode-webview-resource image URLs with embedded base64 data URIs.
+ * Uses the data-original-src attribute to find the actual file path on disk.
+ * Also handles regular local img tags without a data-original-src by checking
+ * whether the src looks like a vscode resource URL.
+ */
+async function embedDomLocalImages(html: string, baseDir: string): Promise<string> {
+  const imgRegex = /<img([^>]*)>/gi;
+  const matches = [...html.matchAll(imgRegex)];
+
+  let result = html;
+  for (let i = matches.length - 1; i >= 0; i--) {
+    const fullTag = matches[i][0];
+    const srcMatch = fullTag.match(/\bsrc=["']([^"']+)["']/i);
+    const originalSrcMatch = fullTag.match(/\bdata-original-src=["']([^"']+)["']/i);
+
+    if (!srcMatch) { continue; }
+    const srcValue = srcMatch[1];
+
+    // Already embedded, or external URL without an original path — skip
+    if (srcValue.startsWith('data:')) { continue; }
+    if (!originalSrcMatch && (srcValue.startsWith('http://') || srcValue.startsWith('https://'))) { continue; }
+    // PlantUML images are handled by embedDomPlantumlImages — skip
+    if (fullTag.includes('livemark-plantuml-img')) { continue; }
+
+    const originalPath = originalSrcMatch ? originalSrcMatch[1] : null;
+    const filePath = originalPath || (
+      srcValue.startsWith('vscode-resource') || srcValue.includes('vscode-webview')
+        ? null
+        : srcValue
+    );
+    if (!filePath) { continue; }
+
+    try {
+      const absolutePath = path.resolve(baseDir, filePath);
+      const imageBuffer = await fs.readFile(absolutePath);
+      const base64 = imageBuffer.toString('base64');
+      const ext = path.extname(absolutePath).toLowerCase();
+      const mimeMap: Record<string, string> = {
+        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',  '.svg': 'image/svg+xml',
+        '.webp': 'image/webp', '.png': 'image/png',
+      };
+      const mimeType = mimeMap[ext] ?? 'image/png';
+      const dataUri = `data:${mimeType};base64,${base64}`;
+
+      let newTag = fullTag.replace(/\bsrc=["'][^"']+["']/i, `src="${dataUri}"`);
+      // Remove the data-original-src attribute — no longer needed
+      newTag = newTag.replace(/\s*\bdata-original-src=["'][^"']+["']/i, '');
+
+      const idx = matches[i].index!;
+      result = result.slice(0, idx) + newTag + result.slice(idx + fullTag.length);
+    } catch (err) {
+      console.warn(`Could not embed image ${filePath}:`, err);
+    }
+  }
+  return result;
+}
+
+/** CSS variable overrides for light-theme standalone export. */
+function getLightThemeCssVars(): string {
+  return `
+      --livemark-bg: #ffffff;
+      --livemark-fg: #333333;
+      --livemark-font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --livemark-font-size: 14px;
+      --livemark-line-height: 1.6;
+      --livemark-link-color: #006ab1;
+      --livemark-link-active: #005da0;
+      --livemark-border: #e0e0e0;
+      --livemark-selection: #add6ff;
+      --livemark-code-bg: #f5f5f5;
+      --livemark-code-fg: #333333;
+      --livemark-blockquote-border: #007acc;
+      --livemark-blockquote-bg: #f8f8f8;
+      --livemark-toolbar-bg: #f3f3f3;
+      --livemark-toolbar-fg: #616161;
+      --livemark-toolbar-border: #e0e0e0;
+      --livemark-btn-hover: #e4e4e4;
+      --livemark-btn-active: #d4d4d4;
+      --livemark-focus-border: #007acc;
+      --livemark-scrollbar: rgba(100, 100, 100, 0.4);
+      --vscode-editor-font-family: monospace;
+      --vscode-editor-font-size: 13px;
+      --vscode-descriptionForeground: #616161;
+      --vscode-input-placeholderForeground: #a0a0a0;
+      --vscode-panel-border: #e0e0e0;
+      --vscode-editorGroupHeader-tabsBackground: rgba(0, 0, 0, 0.05);
+      --vscode-list-hoverBackground: rgba(0, 0, 0, 0.04);
+      --vscode-editorWidget-border: #cecece;
+      --vscode-editorWidget-background: #f3f3f3;
+      --vscode-focusBorder: #007acc;`;
+}
+
+/** CSS variable overrides for dark-theme standalone export. */
+function getDarkThemeCssVars(): string {
+  return `
+      --livemark-bg: #1e1e1e;
+      --livemark-fg: #d4d4d4;
+      --livemark-font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --livemark-font-size: 14px;
+      --livemark-line-height: 1.6;
+      --livemark-link-color: #3794ff;
+      --livemark-link-active: #3794ff;
+      --livemark-border: #3c3c3c;
+      --livemark-selection: #264f78;
+      --livemark-code-bg: #2d2d2d;
+      --livemark-code-fg: #d4d4d4;
+      --livemark-blockquote-border: #007acc;
+      --livemark-blockquote-bg: #2d2d2d;
+      --livemark-toolbar-bg: #252526;
+      --livemark-toolbar-fg: #cccccc;
+      --livemark-toolbar-border: #454545;
+      --livemark-btn-hover: #3c3c3c;
+      --livemark-btn-active: #505050;
+      --livemark-focus-border: #007acc;
+      --livemark-scrollbar: rgba(121, 121, 121, 0.4);
+      --vscode-editor-font-family: monospace;
+      --vscode-editor-font-size: 13px;
+      --vscode-descriptionForeground: #aaaaaa;
+      --vscode-input-placeholderForeground: #666666;
+      --vscode-panel-border: #3c3c3c;
+      --vscode-editorGroupHeader-tabsBackground: rgba(255, 255, 255, 0.05);
+      --vscode-list-hoverBackground: rgba(255, 255, 255, 0.04);
+      --vscode-editorWidget-border: #454545;
+      --vscode-editorWidget-background: #252526;
+      --vscode-focusBorder: #007acc;`;
 }
 
 /**

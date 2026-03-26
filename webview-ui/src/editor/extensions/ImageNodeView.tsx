@@ -96,6 +96,7 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({
           alt={alt || ""}
           title={title || undefined}
           className="livemark-image"
+          data-original-src={originalSrc || undefined}
           onDoubleClick={handleImageDoubleClick}
         />
         <figcaption

@@ -38,25 +38,26 @@ const COMMAND_MAP: Record<string, string> = {
 };
 
 let activePostMessage: PostMessageFn | null = null;
-let pendingHtmlExportResolve: ((result: { html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }> }) => void) | null = null;
+let extensionContext: vscode.ExtensionContext | null = null;
+let pendingHtmlExportResolve: ((result: { html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }>; domHtml?: string; theme?: string }) => void) | null = null;
 
 export function setActiveWebview(postMessage: PostMessageFn | null): void {
   activePostMessage = postMessage;
 }
 
-export function handleHtmlExport(html: string, json?: string, plantumlBlocks?: Array<{ source: string; url: string }>): void {
+export function handleHtmlExport(html: string, json?: string, plantumlBlocks?: Array<{ source: string; url: string }>, domHtml?: string, theme?: string): void {
   if (pendingHtmlExportResolve) {
-    pendingHtmlExportResolve({ html, json, plantumlBlocks });
+    pendingHtmlExportResolve({ html, json, plantumlBlocks, domHtml, theme });
     pendingHtmlExportResolve = null;
   }
 }
 
-async function requestHtmlFromWebview(timeoutMs: number = 5000): Promise<{ html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }> } | null> {
+async function requestHtmlFromWebview(timeoutMs: number = 5000): Promise<{ html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }>; domHtml?: string; theme?: string } | null> {
   if (!activePostMessage) {
     return null;
   }
 
-  return new Promise<{ html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }> } | null>((resolve) => {
+  return new Promise<{ html: string; json?: string; plantumlBlocks?: Array<{ source: string; url: string }>; domHtml?: string; theme?: string } | null>((resolve) => {
     const timeout = setTimeout(() => {
       pendingHtmlExportResolve = null;
       resolve(null);
@@ -76,6 +77,7 @@ async function requestHtmlFromWebview(timeoutMs: number = 5000): Promise<{ html:
 export function registerCommands(
   context: vscode.ExtensionContext
 ): vscode.Disposable[] {
+  extensionContext = context;
   const disposables: vscode.Disposable[] = [];
 
   for (const cmd of COMMANDS) {
@@ -143,12 +145,16 @@ export function registerCommands(
         let renderedHtml: string | undefined;
         let editorJson: string | undefined;
         let plantumlBlocks: Array<{ source: string; url: string }> | undefined;
+        let domHtml: string | undefined;
+        let theme: string | undefined;
         if (isLivemarkEditor && activePostMessage) {
           const result = await requestHtmlFromWebview();
           if (result) {
             renderedHtml = result.html;
             editorJson = result.json;
             plantumlBlocks = result.plantumlBlocks;
+            domHtml = result.domHtml;
+            theme = result.theme;
           }
         }
 
@@ -156,7 +162,7 @@ export function registerCommands(
           alignment: getAlignment(),
           widthMode: getWidthMode(),
           contentWidth: getContentWidth(),
-        }, plantumlBlocks);
+        }, plantumlBlocks, domHtml, theme, extensionContext ?? undefined);
       }
     )
   );
