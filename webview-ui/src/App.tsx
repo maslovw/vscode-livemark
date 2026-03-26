@@ -1,5 +1,103 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import type { Editor } from "@tiptap/react";
+
+// ---------------------------------------------------------------------------
+// Cursor synchronisation helpers (rendered ↔ source)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns all plain text before the TipTap cursor, with block boundaries
+ * joined by newlines so it matches what the markdown serializer emits.
+ */
+function getTextBeforeTiptapCursor(editor: Editor): string {
+  const { anchor } = editor.state.selection;
+  // \uFFFC = object-replacement character used as placeholder for non-text nodes
+  return editor.state.doc.textBetween(0, anchor, "\n", "\uFFFC");
+}
+
+/**
+ * Given the plain text before the cursor in the rendered view, finds the
+ * best-matching position in the markdown string by searching for successively
+ * shorter suffixes until one is found verbatim in the markdown.
+ */
+function findMarkdownPosFromPlainText(plainTextBefore: string, markdown: string): number {
+  if (!plainTextBefore) return 0;
+  const maxLen = Math.min(plainTextBefore.length, 60);
+  for (let len = maxLen; len >= 1; len--) {
+    const needle = plainTextBefore.slice(-len);
+    const idx = markdown.lastIndexOf(needle);
+    if (idx !== -1) return idx + needle.length;
+  }
+  return 0;
+}
+
+/**
+ * Strip common markdown block/inline syntax to approximate plain text.
+ * Used to generate a search needle for suffix-matching against TipTap text.
+ */
+function stripMarkdownSyntax(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, (m) => m.replace(/^```\w*\n?/, "").replace(/\n?```$/, ""))
+    .replace(/\*\*(.+?)\*\*/gs, "$1")
+    .replace(/\*(.+?)\*/gs, "$1")
+    .replace(/__(.+?)__/gs, "$1")
+    .replace(/_(.+?)_/gs, "$1")
+    .replace(/~~(.+?)~~/gs, "$1")
+    .replace(/`(.+?)`/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^[-*+]\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/^>\s*/gm, "")
+    .replace(/!\[.*?\]\([^)]*\)/g, "")
+    .replace(/\[(.+?)\]\([^)]*\)/g, "$1")
+    .replace(/\n{2,}/g, "\n");
+}
+
+/**
+ * Given a text offset in the flat string produced by `doc.textBetween`,
+ * binary-search for the corresponding ProseMirror position.
+ */
+function textOffsetToPmPos(editor: Editor, targetOffset: number): number {
+  const doc = editor.state.doc;
+  let lo = 0;
+  let hi = doc.content.size;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (doc.textBetween(0, mid, "\n", "\uFFFC").length < targetOffset) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+  return lo;
+}
+
+/**
+ * Map a source-textarea cursor position to a ProseMirror position.
+ * Strips markdown from text before the cursor, then suffix-matches
+ * against TipTap's plain text to find the equivalent position.
+ */
+function findTiptapPosFromSourceCursor(
+  editor: Editor,
+  markdown: string,
+  cursorPos: number
+): number {
+  const doc = editor.state.doc;
+  const fullText = doc.textBetween(0, doc.content.size, "\n", "\uFFFC");
+  const plainBefore = stripMarkdownSyntax(markdown.slice(0, cursorPos));
+
+  const maxLen = Math.min(plainBefore.length, 60);
+  for (let len = maxLen; len >= 1; len--) {
+    const needle = plainBefore.slice(-len);
+    const idx = fullText.lastIndexOf(needle);
+    if (idx !== -1) {
+      return textOffsetToPmPos(editor, idx + needle.length);
+    }
+  }
+  // Fallback: start of document
+  return 1;
+}
+// ---------------------------------------------------------------------------
 import { LivemarkEditor } from "./editor/LivemarkEditor";
 import { Toolbar } from "./components/Toolbar";
 import { ModeToggle } from "./components/ModeToggle";
@@ -16,6 +114,10 @@ import type { ExtensionMessage } from "./messages";
 export const App: React.FC = () => {
   const editorRef = useRef<Editor | null>(null);
   const pendingContent = useRef<string | null>(null);
+  const shouldFocusEditorRef = useRef<"start" | "default" | false>(false);
+  const sourceTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const pendingTextareaCursor = useRef<number | null>(null);
+  const pendingSourceCursor = useRef<{ markdown: string; pos: number } | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [isSourceMode, setIsSourceMode] = useState(false);
@@ -54,8 +156,11 @@ export const App: React.FC = () => {
             setPlantumlServer(server);
             plantumlServerRef.current = server;
             setSourceText(message.text);
+            shouldFocusEditorRef.current = "start";
             if (editorRef.current) {
               loadContent(editorRef.current, message.text);
+              setTimeout(() => editorRef.current?.commands.focus("start"), 0);
+              shouldFocusEditorRef.current = false;
             } else {
               // Editor not mounted yet - store for when it's ready
               pendingContent.current = message.text;
@@ -188,6 +293,21 @@ export const App: React.FC = () => {
         loadContent(editor, pendingContent.current);
         pendingContent.current = null;
       }
+      if (pendingSourceCursor.current !== null) {
+        const { markdown, pos: srcPos } = pendingSourceCursor.current;
+        pendingSourceCursor.current = null;
+        setTimeout(() => {
+          if (!editor.isDestroyed) {
+            const pos = findTiptapPosFromSourceCursor(editor, markdown, srcPos);
+            editor.chain().focus().setTextSelection(pos).run();
+          }
+        }, 0);
+      } else if (shouldFocusEditorRef.current) {
+        const focusPos = shouldFocusEditorRef.current;
+        shouldFocusEditorRef.current = false;
+        // Defer focus so TipTap finishes its own initialization first
+        setTimeout(() => editor.commands.focus(focusPos === "start" ? "start" : undefined), 0);
+      }
     },
     [loadContent]
   );
@@ -311,6 +431,13 @@ export const App: React.FC = () => {
     if (isSourceMode) {
       // Switch back to rendered mode - the editor will remount and load content via handleEditorReady
       const editor = editorRef.current;
+      // Capture textarea cursor and map to TipTap plain-text count
+      const taEl = sourceTextareaRef.current;
+      if (taEl) {
+        pendingSourceCursor.current = { markdown: sourceText, pos: taEl.selectionStart };
+      } else {
+        shouldFocusEditorRef.current = "default"; // fallback
+      }
       if (editor) {
         loadContent(editor, sourceText);
       } else {
@@ -323,6 +450,9 @@ export const App: React.FC = () => {
       if (!editor) return;
       // Switch to source mode - serialize current content
       const text = serializeMarkdown(editor.getJSON(), baseUriRef.current);
+      // Capture TipTap cursor and map to markdown string position
+      const textBefore = getTextBeforeTiptapCursor(editor);
+      pendingTextareaCursor.current = findMarkdownPosFromPlainText(textBefore, text);
       setSourceText(text);
       setIsSourceMode(true);
     }
@@ -411,6 +541,17 @@ export const App: React.FC = () => {
       >
         {isSourceMode ? (
           <textarea
+            ref={(el) => {
+              sourceTextareaRef.current = el;
+              if (el) {
+                el.focus();
+                if (pendingTextareaCursor.current !== null) {
+                  const pos = pendingTextareaCursor.current;
+                  pendingTextareaCursor.current = null;
+                  el.selectionStart = el.selectionEnd = pos;
+                }
+              }
+            }}
             className="livemark-source-editor"
             value={sourceText}
             onChange={handleSourceChange}
